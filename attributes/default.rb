@@ -20,6 +20,7 @@
 # Override OpenJDK to Oracle Java instead
 normal["java"]["install_flavor"] = "oracle"
 normal["java"]["oracle"]["accept_oracle_download_terms"] = true
+normal['java']['jdk_version'] = "7"
 
 default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
@@ -47,12 +48,13 @@ default["cassandra"]["home_dir"] = "/usr/share/cassandra"
 default["cassandra"]["pid_file"] = "/var/run/cassandra/cassandra.pid"
 default["cassandra"]["extra_services"] = ["opscenterd"]
 default["cassandra"]["packages"] = {
-  "python-cql" => { "version" => "1.0.10-1" },
-  "dsc1.1" => { "version" => "1.1.6-1" },
-  "opscenter-free" => { "version" => "2.1.2-1" }
+    "python-cql" => { "version" => "1.4.0-2" },
+    "dsc20" => { "version" => "2.0.2-1" },
+    "opscenter" => { "version" => "4.0.1-2"}
 }
 default["cassandra"]["chef_gems"] = {
-  "cassandra-cql" => { "version" => "1.1.4" }
+  "cassandra-cql" => {},
+  "thin" => {}
 }
 default["cassandra"]["storage_port"] = 7000
 default["cassandra"]["ssl_storage_port"] = 7001

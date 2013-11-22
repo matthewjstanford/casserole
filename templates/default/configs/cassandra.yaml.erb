@@ -27,7 +27,7 @@ hinted_handoff_enabled: true
 # generated.  After it has been dead this long, hints will be dropped.
 max_hint_window_in_ms: 3600000 # one hour
 # Sleep this long after delivering each hint
-hinted_handoff_throttle_delay_in_ms: 1
+#hinted_handoff_throttle_delay_in_ms: 1
 
 # The following setting populates the page cache on memtable flush and compaction
 # WARNING: Enable this setting only when the whole node's data fits in memory.
@@ -38,7 +38,7 @@ hinted_handoff_throttle_delay_in_ms: 1
 authenticator: org.apache.cassandra.auth.AllowAllAuthenticator
 
 # authorization backend, implementing IAuthority; used to limit access/provide permissions
-authority: org.apache.cassandra.auth.AllowAllAuthority
+#authority: org.apache.cassandra.auth.AllowAllAuthority
 
 # The partitioner is responsible for distributing rows (by key) across
 # nodes in the cluster.  Any IPartitioner may be used, including your
@@ -62,7 +62,8 @@ authority: org.apache.cassandra.auth.AllowAllAuthority
 #
 # See http://wiki.apache.org/cassandra/Operations for more on
 # partitioners and token selection.
-partitioner: org.apache.cassandra.dht.RandomPartitioner
+partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+# row_cache_provider, authority, reduce_cache_sizes_at, rpc_timeout_in_ms, hinted_handoff_throttle_delay_in_ms, reduce_cache_capacity_to, flush_largest_memtables_at
 
 # directories where Cassandra should store data on disk.
 data_file_directories:
@@ -135,7 +136,7 @@ row_cache_save_period: 0
 # that implements org.apache.cassandra.cache.IRowCacheProvider.
 #
 # Defaults to SerializingCacheProvider
-row_cache_provider: SerializingCacheProvider
+# row_cache_provider: SerializingCacheProvider
 
 # saved caches
 saved_caches_directory: /var/lib/cassandra/saved_caches
@@ -190,7 +191,7 @@ seed_provider:
 # it is most effective under light to moderate load, or read-heavy
 # workloads; under truly massive write load, it will often be too
 # little, too late.
-flush_largest_memtables_at: 0.75
+#flush_largest_memtables_at: 0.75
 
 # emergency pressure valve #2: the first time heap usage after a full
 # (CMS) garbage collection is above this fraction of the max,
@@ -201,8 +202,8 @@ flush_largest_memtables_at: 0.75
 # 
 # Set to 1.0 to disable.  Setting this lower than
 # CMSInitiatingOccupancyFraction is not likely to be useful.
-reduce_cache_sizes_at: 0.85
-reduce_cache_capacity_to: 0.6
+#reduce_cache_sizes_at: 0.85
+#reduce_cache_capacity_to: 0.6
 
 # For workloads with more data than can fit in memory, Cassandra's
 # bottleneck will be reads that need to fetch data from
@@ -409,7 +410,7 @@ compaction_preheat_key_cache: true
 # stream_throughput_outbound_megabits_per_sec: 400
 
 # Time to wait for a reply from other nodes before failing the command 
-rpc_timeout_in_ms: 10000
+#rpc_timeout_in_ms: 10000
 
 # Enable socket timeout for streaming operation.
 # When a timeout occurs during streaming, streaming is retried from the start
