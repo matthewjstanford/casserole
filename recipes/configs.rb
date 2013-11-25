@@ -109,23 +109,9 @@ end
 script "alter_cluster_name" do
   interpreter "bash"
   user "root"
-  #code <<-EOH.gsub(/^ +/, "")
-  #  service #{node["cassandra"]["name"]} stop
-  #  rm -f /var/lib/cassandra/data/system/LocationInfo/*
-  #  service #{node["cassandra"]["name"]} start
-  #EOH
-  code "rm -f /var/lib/cassandra/data/system/LocationInfo/*"
-  only_if do
-    require "cassandra-cql"
-
-    db = CassandraCQL::Database.new("127.0.0.1:9160", { :keyspace => "system" })
-    row = "L".each_byte.map { |b| b.to_s(16) }.join
-    colfam = "LocationInfo"
-    name = db.execute("SELECT * FROM #{colfam} WHERE KEY = '#{row}'").
-      fetch["ClusterName"]
-    name != node["cassandra"]["cluster_name"]
-  end
-  notifies :restart, "service[#{node["cassandra"]["name"]}]", :immediate
+  code "echo \"update local set cluster_name = '#{node["cassandra"]["cluster_name"]}' where key = 'local';\" | cqlsh -k system; nodetool flush;"
+  not_if "echo \"select cluster_name from local where key = 'local';\" | cqlsh -k system | grep \"#{node["cassandra"]["cluster_name"]}\""
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker
