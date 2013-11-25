@@ -19,6 +19,13 @@
 
 service node["cassandra"]["name"]
 
+node["cassandra"]["build_packages"].each do |pkg|
+  p = package "#{pkg}" do
+    action :nothing
+  end
+  p.run_action(:install)
+end
+
 node["cassandra"]["packages"].each do |pkg, attrs|
   package pkg do
     action :install

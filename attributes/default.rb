@@ -26,6 +26,8 @@ default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
 default["cassandra"]["node_id"] = node["fqdn"]
 
+default["cassandra"]["build_packages"] = %w'autoconf automake binutils bison byacc crash cscope ctags cvs diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gdb gettext git indent intltool kexec-tools latrace libtool ltrace patch patchutils rcs rpm-build strace subversion swig texinfo valgrind'
+
 # Cluster definition attributes can be overridden by the data bags that
 # cluster_parser.rb merges in, or by higher precedence attributes applied
 # later

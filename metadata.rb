@@ -10,11 +10,8 @@ depends           "yum", "= 2.0.2"
 depends           "apt", "= 1.5.0"
 depends           "java", "= 1.6.4"
 
-supports          "ubuntu", ">= 10.04"
-#supports         "debian", ">= 6.0"
-supports          "redhat", ">= 5.0"
-supports          "centos", ">= 5.0"
-supports          "scientific", ">= 5.0"
-#supports         "amazon", ">= 5.0"
+supports          "redhat", ">= 6.0"
+supports          "centos", ">= 6.0"
+supports          "amazon", ">= 2013.0"
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker
