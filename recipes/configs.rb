@@ -72,7 +72,7 @@ template "#{conf_dir}/cassandra.yaml" do
     :endpoint_snitch => node["cassandra"]["endpoint_snitch"],
     :encryption_options => node["cassandra"]["encryption_options"]
   )
-  notifies :restart, "service[#{node["cassandra"]["name"]}]"
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
 my_dc = node["cassandra"]["datacenter"]
@@ -88,7 +88,7 @@ template "#{conf_dir}/cassandra-rackdc.properties" do
     :datacenter => my_dc,
     :rack => my_rack
   )
-  notifies :restart, "service[#{node["cassandra"]["name"]}]"
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
 template "#{conf_dir}/cassandra-topology.properties" do
@@ -102,18 +102,19 @@ template "#{conf_dir}/cassandra-topology.properties" do
     :default_datacenter => node["cassandra"]["default_datacenter"],
     :default_rack => node["cassandra"]["default_rack"]
   )
-  notifies :restart, "service[#{node["cassandra"]["name"]}]"
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
 # Clear the system LocationInfo to force a cluster_name change
 script "alter_cluster_name" do
   interpreter "bash"
   user "root"
-  code <<-EOH.gsub(/^ +/, "")
-    service #{node["cassandra"]["name"]} stop
-    rm -f /var/lib/cassandra/data/system/LocationInfo/*
-    service #{node["cassandra"]["name"]} start
-  EOH
+  #code <<-EOH.gsub(/^ +/, "")
+  #  service #{node["cassandra"]["name"]} stop
+  #  rm -f /var/lib/cassandra/data/system/LocationInfo/*
+  #  service #{node["cassandra"]["name"]} start
+  #EOH
+  code "rm -f /var/lib/cassandra/data/system/LocationInfo/*"
   only_if do
     require "cassandra-cql"
 
@@ -124,6 +125,7 @@ script "alter_cluster_name" do
       fetch["ClusterName"]
     name != node["cassandra"]["cluster_name"]
   end
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :immediate
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker

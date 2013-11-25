@@ -53,8 +53,7 @@ default["cassandra"]["packages"] = {
     "opscenter" => { "version" => "4.0.1-2"}
 }
 default["cassandra"]["chef_gems"] = {
-  "cassandra-cql" => {},
-  "thin" => {}
+  "cassandra-cql" => {"version" => '1.2.1'}
 }
 default["cassandra"]["storage_port"] = 7000
 default["cassandra"]["ssl_storage_port"] = 7001
