@@ -93,6 +93,10 @@ template "#{conf_dir}/cassandra-topology.properties" do
   notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
+service node["cassandra"]["name"] do
+  action :start
+end
+
 # Clear the system LocationInfo to force a cluster_name change
 script "alter_cluster_name" do
   interpreter "bash"
