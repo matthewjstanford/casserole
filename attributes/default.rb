@@ -28,27 +28,6 @@ default["cassandra"]["node_id"] = node["fqdn"]
 
 default["cassandra"]["build_packages"] = %w'autoconf automake binutils bison byacc crash cscope ctags cvs diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gdb gettext git indent intltool kexec-tools latrace libtool ltrace patch patchutils rcs rpm-build strace subversion swig texinfo valgrind'
 
-# Cluster definition attributes can be overridden by the data bags that
-# cluster_parser.rb merges in, or by higher precedence attributes applied
-# later
-default["cassandra"]["cluster_name"] = "Casserole Cluster"
-default["cassandra"]["cluster_nodes"] = {}
-default["cassandra"]["listen_address"] = node["ipaddress"]
-default["cassandra"]["broadcast_address"] = nil # Empty = reuse listen_address
-default["cassandra"]["endpoint_snitch"] = "SimpleSnitch"
-default["cassandra"]["seed_list"] = nil
-default["cassandra"]["datacenter"] = nil
-default["cassandra"]["rack"] = nil
-default["cassandra"]["initial_token"] = nil # Empty = auto-bootstrap
-default["cassandra"]["default_datacenter"] = "DC1"
-default["cassandra"]["default_rack"] = "RAC1"
-
-default["cassandra"]["name"] = "cassandra"
-default["cassandra"]["user"] = "cassandra"
-default["cassandra"]["group"] = "cassandra"
-default["cassandra"]["home_dir"] = "/usr/share/cassandra"
-default["cassandra"]["pid_file"] = "/var/run/cassandra/cassandra.pid"
-default["cassandra"]["extra_services"] = ["opscenterd"]
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
     "dsc20" => { "version" => "2.0.2-1" },
@@ -57,26 +36,23 @@ default["cassandra"]["packages"] = {
 default["cassandra"]["chef_gems"] = {
   "cassandra-cql" => {"version" => '1.2.1'}
 }
-default["cassandra"]["storage_port"] = 7000
-default["cassandra"]["ssl_storage_port"] = 7001
 
-# Encryption options
-default["cassandra"]["encryption_options"]["internode_encryption"] = "none"
-default["cassandra"]["encryption_options"]["key"] = nil
-default["cassandra"]["encryption_options"]["keystore"] = ".keystore"
-default["cassandra"]["encryption_options"]["keystore_password"] = "cassandra"
-default["cassandra"]["encryption_options"]["crt"] = nil
-default["cassandra"]["encryption_options"]["truststore"] = ".truststore"
-default["cassandra"]["encryption_options"]["truststore_password"] = "cassandra"
+default["cassandra"]["extra_services"] = ["opscenterd"]
 
-# Advanced encryption options
-default["cassandra"]["encryption_options"]["protocol"] = "TLS"
-default["cassandra"]["encryption_options"]["algorithm"] = "SunX509"
-default["cassandra"]["encryption_options"]["store_type"] = "JKS"
-default["cassandra"]["encryption_options"]["cipher_suites"] = %w{
-  TLS_RSA_WITH_AES_128_CBC_SHA
-  TLS_RSA_WITH_AES_256_CBC_SHA
-}
+# Cluster definition attributes can be overridden by the data bags that
+# cluster_parser.rb merges in, or by higher precedence attributes applied
+# later
+default["cassandra"]["cluster_nodes"] = {}
+default["cassandra"]["datacenter"] = nil
+default["cassandra"]["rack"] = nil
+default["cassandra"]["default_datacenter"] = "DC1"
+default["cassandra"]["default_rack"] = "RAC1"
+
+default["cassandra"]["name"] = "cassandra"
+default["cassandra"]["user"] = "cassandra"
+default["cassandra"]["group"] = "cassandra"
+default["cassandra"]["home_dir"] = "/usr/share/cassandra"
+default["cassandra"]["pid_file"] = "/var/run/cassandra/cassandra.pid"
 
 case node["platform_family"]
 when "rhel"

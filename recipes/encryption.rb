@@ -19,17 +19,17 @@
 
 conf_dir = node["cassandra"]["conf_dir"]
 internode_encryption =
-  node["cassandra"]["encryption_options"]["internode_encryption"]
+  node["cassandra"]["config"]["server_encryption_options"]["internode_encryption"]
 key = node["cassandra"]["encryption_options"]["key"]
 keystore = File.expand_path(
-  node["cassandra"]["encryption_options"]["keystore"], conf_dir)
+  node["cassandra"]["config"]["server_encryption_options"]["keystore"], conf_dir)
 keystore_password =
-  node["cassandra"]["encryption_options"]["keystore_password"]
+  node["cassandra"]["config"]["server_encryption_options"]["keystore_password"]
 crt = node["cassandra"]["encryption_options"]["crt"]
 truststore = File.expand_path(
-  node["cassandra"]["encryption_options"]["truststore"], conf_dir)
+  node["cassandra"]["config"]["server_encryption_options"]["truststore"], conf_dir)
 truststore_password =
-  node["cassandra"]["encryption_options"]["truststore_password"]
+  node["cassandra"]["config"]["server_encryption_options"]["truststore_password"]
 
 if !%w{all dc rack}.include?(internode_encryption)
   raise Chef::Exceptions::ConfigurationError,

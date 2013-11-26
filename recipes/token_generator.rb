@@ -30,9 +30,9 @@ node_count = dc_nodes.length
 Chef::Log.info "Token generator found #{node_count} nodes in this DC"
 node_pos = dc_nodes.index(node["cassandra"]["node_id"])
 Chef::Log.info "Token generator found this node's position as #{node_pos}"
-node.default["cassandra"]["initial_token"] = 2**127 / node_count * node_pos +
+node.default["cassandra"]["config"]["initial_token"] = 2**127 / node_count * node_pos +
   dc_offset
 
-Chef::Log.info "Generated token of #{node["cassandra"]["initial_token"]}"
+Chef::Log.info "Generated token of #{node["cassandra"]["config"]["initial_token"]}"
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker
