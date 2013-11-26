@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe "sysctl"
+include_recipe "ntp"
 include_recipe "java"
 include_recipe "#{@cookbook_name}::user"
 include_recipe "#{@cookbook_name}::repos"

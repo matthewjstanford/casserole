@@ -51,6 +51,7 @@ default["cassandra"]["default_rack"] = "RAC1"
 default["cassandra"]["name"] = "cassandra"
 default["cassandra"]["user"] = "cassandra"
 default["cassandra"]["group"] = "cassandra"
+default["cassandra"]["limits"]["nofile"] = 4096
 default["cassandra"]["home_dir"] = "/usr/share/cassandra"
 default["cassandra"]["pid_file"] = "/var/run/cassandra/cassandra.pid"
 

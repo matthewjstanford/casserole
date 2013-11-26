@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe "ulimit"
+
 u = node["cassandra"]["user"]
 g = node["cassandra"]["group"]
 
@@ -33,6 +35,10 @@ group g do
   system true
   action :create
   only_if { u != g }
+end
+
+user_ulimit u do
+  filehandle_limit node['cassandra']['limits']['nofile']
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker
