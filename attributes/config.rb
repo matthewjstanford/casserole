@@ -1,5 +1,8 @@
 # Cassandra storage config YAML 
 
+# Note about the Chef attributes file:
+# nil values will be removed at runtime
+
 # NOTE:
 #   See http://wiki.apache.org/cassandra/StorageConfiguration for
 #   full explanations of configuration directives
@@ -7,7 +10,7 @@
 
 # The name of the cluster. This is mainly used to prevent machines in
 # one logical cluster from joining another.
-default['cassandra']['config']['cluster_name'] = 'Knotice Vagrant Cluster'
+default['cassandra']['config']['cluster_name'] = 'Casserole Cluster'
 
 # This defines the number of tokens randomly assigned to this node on the ring
 # The more tokens, relative to other nodes, the larger the proportion of data
@@ -237,8 +240,8 @@ default['cassandra']['config']['seed_provider'] = [
 # On the other hand, since writes are almost never IO bound, the ideal
 # number of "concurrent_writes" is dependent on the number of cores in
 # your system; (8 * number_of_cores) is a good rule of thumb.
-default['cassandra']['config']['concurrent_reads'] = 32
-default['cassandra']['config']['concurrent_writes'] = 32
+default['cassandra']['config']['concurrent_reads'] = 16 * node['cassandra']['config']['data_file_directories'].length
+default['cassandra']['config']['concurrent_writes'] = 8 * node['cpu']['total']
 
 # Total memory to use for sstable-reading buffers.  Defaults to
 # the smaller of 1/4 of heap or 512MB.
@@ -264,7 +267,7 @@ default['cassandra']['config']['commitlog_total_space_in_mb'] = 4096
 # while blocked. If you have a large heap and many data directories,
 # you can increase this value for better flush performance.
 # By default this will be set to the amount of data directories defined.
-default['cassandra']['config']['memtable_flush_writers'] = 1
+default['cassandra']['config']['memtable_flush_writers'] = node['cassandra']['config']['data_file_directories'].length
 
 # the number of full memtables to allow pending flush, that is,
 # waiting for a writer thread.  At a minimum, this should be set to
@@ -330,7 +333,7 @@ default['cassandra']['config']['start_rpc'] = true
 # Note that unlike ListenAddress above, it is allowed to specify 0.0.0.0
 # here if you want to listen on all interfaces, but that will break clients 
 # that rely on node auto-discovery.
-default['cassandra']['config']['rpc_address'] = 'localhost'
+default['cassandra']['config']['rpc_address'] = node['ipaddress']
 # port for Thrift to listen for clients on
 default['cassandra']['config']['rpc_port'] = 9160
 
@@ -354,7 +357,7 @@ default['cassandra']['config']['rpc_keepalive'] = true
 #
 # Alternatively,  can provide your own RPC server by providing the fully-qualified class name
 # of an o.a.c.t.TServerFactory that can create an instance of it.
-default['cassandra']['config']['rpc_server_type'] = 'sync'
+default['cassandra']['config']['rpc_server_type'] = 'hsha'
 
 # Uncomment rpc_min|max_thread to set request pool size limits.
 #
@@ -372,8 +375,6 @@ default['cassandra']['config']['rpc_min_threads'] = nil
 default['cassandra']['config']['rpc_max_threads'] = nil
 
 # uncomment to set socket buffer sizes on rpc connections
-# rpc_send_buff_size_in_bytes:
-# rpc_recv_buff_size_in_bytes:
 default['cassandra']['config']['rpc_send_buff_size_in_bytes'] = nil
 default['cassandra']['config']['rpc_recv_buff_size_in_bytes'] = nil
 
