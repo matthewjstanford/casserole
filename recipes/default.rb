@@ -34,7 +34,7 @@ if node["cassandra"]["clustered"] and !node["cassandra"]["config"]["initial_toke
 end
 include_recipe "#{@cookbook_name}::configs"
 
-([node["cassandra"]["name"]] + node["cassandra"]["extra_services"]).each do |s|
+(node["cassandra"]["extra_services"]).each do |s|
   service s do
     supports :restart => true, :status => true
     action [:enable, :start]

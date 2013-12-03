@@ -56,6 +56,7 @@ end
 
 service node["cassandra"]["name"] do
   action :start
+  retries 2
 end
 
 # Connect to the running cluster and change the name, if necessary

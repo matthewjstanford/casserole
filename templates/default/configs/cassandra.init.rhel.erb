@@ -94,14 +94,14 @@ do_start() {
     ulimit -n 100000
     [ $? = 0 ] || do_failure "Ulimit call failed"
 
-    [ ! -d <%= @data_file_directories %>/system/local ] && echo && \
+    [ ! -d <%= @data_file_directories[0] %>/system/local ] && echo && \
         echo "(starting up for the first time, may take a minute) " && \
         newnode="true"
 
     su $CASSANDRA_USER -c "$PROG -p $PIDFILE > /dev/null"
     [ $? = 0 ] || do_failure "Failed to start Cassandra daemon"
     # Give Cassandra a bit to start accepting traffic
-    for i in `seq 1 30`; do
+    for i in `seq 1 60`; do
         is_running
         ret=$?
         [ $ret = 0 ] && return 0
