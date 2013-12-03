@@ -75,13 +75,16 @@ template "/etc/init.d/#{node["cassandra"]["name"]}" do
   mode "0755"
   source "configs/cassandra.init.#{node["platform_family"]}.erb"
   variables(
-    :service_name => node["cassandra"]["name"],
-    :home_dir => node["cassandra"]["home_dir"],
-    :conf_dir => node["cassandra"]["conf_dir"],
-    :pid_file => node["cassandra"]["pid_file"],
-    :user => node["cassandra"]["user"]
+    :service_name           => node["cassandra"]["name"],
+    :home_dir               => node["cassandra"]["home_dir"],
+    :conf_dir               => node["cassandra"]["conf_dir"],
+    :pid_file               => node["cassandra"]["pid_file"],
+    :user                   => node["cassandra"]["user"],
+    :data_file_directories  => node["cassandra"]["config"]["data_file_directories"],
+    :listen_address         => node["cassandra"]["config"]["listen_address"] || 'localhost',
+    :rpc_port               => node["cassandra"]["config"]["rpc_port"] || '9160'
   )
-  notifies :restart, "service[#{node["cassandra"]["name"]}]"
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker

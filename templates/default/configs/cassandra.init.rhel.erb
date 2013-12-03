@@ -22,9 +22,9 @@ PIDFILE=<%= @pid_file %>
 PROG=`which cassandra`
 
 is_running() {
-    (echo > /dev/tcp/localhost/9160) &> /dev/null
+    (echo > /dev/tcp/<%= @listen_address %>/<%= @rpc_port %>) &> /dev/null
     thrift=$?
-    (echo > /dev/tcp/localhost/7199) &> /dev/null
+    (echo > /dev/tcp/<%= @listen_address %>/7199) &> /dev/null
     jmx=$?
     [ -e $PIDFILE ]
     pid=$?
@@ -94,14 +94,14 @@ do_start() {
     ulimit -n 100000
     [ $? = 0 ] || do_failure "Ulimit call failed"
 
-    [ ! -d /var/lib/cassandra/data/system/LocationInfo ] && echo && \
+    [ ! -d <%= @data_file_directories %>/system/local ] && echo && \
         echo "(starting up for the first time, may take a minute) " && \
         newnode="true"
 
     su $CASSANDRA_USER -c "$PROG -p $PIDFILE > /dev/null"
     [ $? = 0 ] || do_failure "Failed to start Cassandra daemon"
     # Give Cassandra a bit to start accepting traffic
-    for i in `seq 1 20`; do
+    for i in `seq 1 30`; do
         is_running
         ret=$?
         [ $ret = 0 ] && return 0
