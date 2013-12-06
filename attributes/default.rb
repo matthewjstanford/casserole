@@ -26,15 +26,15 @@ default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
 default["cassandra"]["node_id"] = node["fqdn"]
 
-default["cassandra"]["build_packages"] = %w'autoconf automake binutils bison byacc crash cscope ctags cvs diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gdb gettext git indent intltool kexec-tools latrace libtool ltrace patch patchutils rcs rpm-build strace subversion swig texinfo valgrind'
+#default["cassandra"]["build_packages"] = %w'autoconf automake binutils bison byacc crash cscope ctags cvs diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gdb gettext git indent intltool kexec-tools latrace libtool ltrace patch patchutils rcs rpm-build strace subversion swig texinfo valgrind'
+default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
-    "dsc20" => { "version" => "2.0.2-1" },
-    "opscenter" => { "version" => "4.0.1-2"}
+    "dsc20" => { "version" => "2.0.3-1" },
+    "opscenter" => { "version" => "4.0.1-2"},
 }
 default["cassandra"]["chef_gems"] = {
-  "cassandra-cql" => {"version" => '1.2.1'}
 }
 
 default["cassandra"]["extra_services"] = ["opscenterd"]
@@ -44,16 +44,21 @@ default["cassandra"]["extra_services"] = ["opscenterd"]
 # later
 default["cassandra"]["cluster_nodes"] = {}
 default["cassandra"]["datacenter"] = nil
+default["cassandra"]["datacenter_suffix"] = "az1"
 default["cassandra"]["rack"] = nil
 default["cassandra"]["default_datacenter"] = "DC1"
 default["cassandra"]["default_rack"] = "RAC1"
+default["cassandra"]["rackdc"]["prefer_local"] = false
 
+# User settings
 default["cassandra"]["name"] = "cassandra"
 default["cassandra"]["user"] = "cassandra"
 default["cassandra"]["group"] = "cassandra"
-default["cassandra"]["limits"]["nofile"] = 4096
 default["cassandra"]["home_dir"] = "/usr/share/cassandra"
-default["cassandra"]["pid_file"] = "/var/run/cassandra/cassandra.pid"
+default["cassandra"]["limits"]["nofile"] = 100000
+default["cassandra"]["limits"]["memlock"] = 'unlimited'
+default["cassandra"]["limits"]["nproc"] = 32768
+default["cassandra"]["limits"]["as"] = 'unlimited'
 
 case node["platform_family"]
 when "rhel"
@@ -80,4 +85,3 @@ default["cassandra"]["repos"] = {
   }
 }
 
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker

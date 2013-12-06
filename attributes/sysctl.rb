@@ -1,4 +1,6 @@
 default['sysctl']['params']['vm']['swappiness'] = 0
+default['sysctl']['params']['vm']['max_map_count'] = 131072
+
 default['sysctl']['params']['net']['ipv4']['tcp_max_syn_backlog'] = 40000
 default['sysctl']['params']['net']['ipv4']['tcp_timestamps'] = 0
 default['sysctl']['params']['net']['ipv4']['tcp_sack'] = 1

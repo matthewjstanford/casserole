@@ -1,10 +1,10 @@
 def load_current_resource
-  require "cassandra-cql"
   super
 end
 
 action :run do
-  ruby "alter_cluster_name #{new_resource.name}" do
+  script "alter_cluster_name #{new_resource.name}" do
+    interpreter "bash"
     user "root"
 
     conf = YAML.load_file('/etc/cassandra/conf/cassandra.yaml')
@@ -14,25 +14,23 @@ action :run do
 
     listen_address = '127.0.0.1' if listen_address == 'localhost'
 
-    cluster_name = new_resource.name.chars.map {|c| c.unpack('H*')}.join
+    #cluster_name = new_resource.name.chars.map {|c| c.unpack('H*')}.join
 
-    code <<-RUBY
-    require "cassandra-cql"
-    db = CassandraCQL::Database.new("#{listen_address}:#{listen_port}", { :keyspace => "system" })
-    db.execute("UPDATE local SET 'cluster_name' = '#{cluster_name}' where key = 'local'")
-    RUBY
+    code "echo \"update local set cluster_name = '#{new_resource.name}' where key = 'local';\" | cqlsh -k system #{listen_address} #{listen_port}"
 
-#    only_if do
-#      db = CassandraCQL::Database.new("#{listen_address}:#{listen_port}", { :keyspace => "system" })
-#      colfam = "local"
-#      name = db.execute("SELECT * FROM #{colfam} WHERE KEY = 'local'").fetch["cluster_name"]
-#      name != node["cassandra"]["cluster_name"]
-#    end
+    not_if <<-BASH
+    vCN=`echo "select cluster_name from local where key = 'local';" | cqlsh --no-color -k system #{listen_address} #{listen_port} | grep -A 2 cluster_name | tail -n 1 | sed -e 's/^ *//g' -e 's/ *$//g'`
+    if [ "$vCN" == "#{new_resource.name}" ]; then
+        echo "match"
+        exit 0
+      else
+        echo "no match"
+        exit 1
+    fi
+    BASH
 
     notifies :run, "script[flush #{new_resource.name}]", :immediate
   end
-
-  #log "Flushing 
 
   script "flush #{new_resource.name}" do
     interpreter "bash"

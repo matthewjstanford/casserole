@@ -19,10 +19,11 @@
 
 include_recipe "sysctl"
 include_recipe "ntp"
-include_recipe "java"
 include_recipe "#{@cookbook_name}::user"
 include_recipe "#{@cookbook_name}::repos"
 include_recipe "#{@cookbook_name}::packages"
+include_recipe "java" # Java needs to be after packages, in case OpenJDK gets installed by the packages
+
 if node["cassandra"]["clustered"] and node["cassandra"]["data_bag"]
   include_recipe "#{@cookbook_name}::data_bag_parser"
 end
@@ -40,14 +41,3 @@ include_recipe "#{@cookbook_name}::configs"
     action [:enable, :start]
   end
 end
-
-file "#{node["cassandra"]["home_dir"]}/chef_install.log" do
-  owner "root"
-  group "root"
-  mode "0644"
-  action :create
-  content "First run completed #{Time.new}. Do NOT remove this file."
-  only_if { !File.exist?("#{node["cassandra"]["home_dir"]}/chef_install.log") }
-end
-
-# vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker

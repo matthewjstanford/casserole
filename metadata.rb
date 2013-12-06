@@ -8,7 +8,7 @@ version           "0.2.0"
 
 depends           "yum"
 depends           "apt"
-depends           "java"
+depends           "java", "~> 1.15"
 depends           "sysctl"
 depends           "ulimit"
 depends           "ntp"
