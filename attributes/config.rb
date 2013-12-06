@@ -228,7 +228,7 @@ default['cassandra']['config']['commitlog_segment_size_in_mb'] = 32
 # Ex: "<ip1>,<ip2>,<ip3>"
 default['cassandra']['config']['seed_provider'] = [
   { 'class_name' => 'org.apache.cassandra.locator.SimpleSeedProvider',
-    'parameters' => [{'seeds' => node['ipaddress']}]
+    'parameters' => [{'seeds' => node['cassandra']['seed_list'].compact.sort.join(',')}]
   }]
 
 # For workloads with more data than can fit in memory, Cassandra's

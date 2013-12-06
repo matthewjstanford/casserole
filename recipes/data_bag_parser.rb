@@ -20,8 +20,7 @@
 # Combine data bag settings with ones provided in the attributes phase
 # to create a full attribute set for this node.
 
-cluster_conf = data_bag_item(node["cassandra"]["data_bag"],
-  node["cassandra"]["cluster_name"])
+cluster_conf = data_bag_item(node["cassandra"]["data_bag"], node["cassandra"]["config"]["cluster_name"])
 node.default["cassandra"]["cluster_nodes"] = cluster_conf["nodes"]
 
 # Extract the information about the node from the cluster
@@ -32,29 +31,28 @@ if !node_conf
 end
 
 # Allow data bag entries to take precedence over default attributes
-%w{listen_address broadcast_address datacenter rack}.each do |a|
-  if node_conf[a] then node.default["cassandra"][a] = node_conf[a] end
+node_conf['config'].each do |k,v|
+  node.default["cassandra"]["config"][k] = v 
 end
-%w{endpoint_snitch}.each do |a|
-  if cluster_conf[a] then node.default["cassandra"][a] = cluster_conf[a] end
+%w{endpoint_snitch num_tokens}.each do |a|
+  node.default["cassandra"]["config"][a] = cluster_conf[a] if cluster_conf[a]
+end
+%w{datacenter rack}.each do |a|
+  node.default["cassandra"][a] = node_conf[a] if node_conf[a]
+end
+%w{datacenter_suffix}.each do |a|
+  node.default["cassandra"][a] = cluster_conf[a] if cluster_conf[a]
 end
 
 # Determine the seed nodes, sorted so the list is the same across the cluster
-node.default["cassandra"]["seed_list"] = cluster_conf["nodes"].collect do |k, v|
-  v["broadcast_address"] if v["seed"]
-end.compact.sort
-if node["cassandra"]["seed_list"].empty?
+a = []
+cluster_conf["nodes"].each do |k, v|
+  a << v['config']["broadcast_address"] if v["seed"]
+end
+if a.empty?
   raise Chef::Exceptions::ConfigurationError, "Seed list cannot be empty"
 end
 
-# Check for any encryption option overrides
-cluster_conf["encryption_options"].each do |k, v|
-  node.default["cassandra"]["encryption_options"][k] = v
-end
-
-# Check if an initial_token was provided in the data bag
-if node_conf["initial_token"]
-  node.default["cassandra"]["initial_token"] = node_conf["initial_token"]
-end
+node.default['cassandra']['config']['seed_provider'][0]['parameters'][0]['seeds'] = a.compact.sort.join(',')
 
 # vim: ai et ts=2 sts=2 sw=2 ft=ruby fdm=marker

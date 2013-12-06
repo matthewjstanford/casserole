@@ -26,7 +26,6 @@ default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
 default["cassandra"]["node_id"] = node["fqdn"]
 
-#default["cassandra"]["build_packages"] = %w'autoconf automake binutils bison byacc crash cscope ctags cvs diffstat doxygen elfutils flex gcc gcc-c++ gcc-gfortran gdb gettext git indent intltool kexec-tools latrace libtool ltrace patch patchutils rcs rpm-build strace subversion swig texinfo valgrind'
 default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
@@ -40,7 +39,7 @@ default["cassandra"]["chef_gems"] = {
 default["cassandra"]["extra_services"] = ["opscenterd"]
 
 # Cluster definition attributes can be overridden by the data bags that
-# cluster_parser.rb merges in, or by higher precedence attributes applied
+# data_bag_parser.rb merges in, or by higher precedence attributes applied
 # later
 default["cassandra"]["cluster_nodes"] = {}
 default["cassandra"]["datacenter"] = nil
@@ -49,6 +48,7 @@ default["cassandra"]["rack"] = nil
 default["cassandra"]["default_datacenter"] = "DC1"
 default["cassandra"]["default_rack"] = "RAC1"
 default["cassandra"]["rackdc"]["prefer_local"] = false
+default["cassandra"]["seed_list"] = [node['ipaddress']]
 
 # User settings
 default["cassandra"]["name"] = "cassandra"

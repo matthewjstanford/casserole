@@ -30,8 +30,10 @@ end
 if node["cassandra"]["config"]["server_encryption_options"]["internode_encryption"] != "none"
   include_recipe "#{@cookbook_name}::encryption"
 end
-if node["cassandra"]["clustered"] and !node["cassandra"]["config"]["initial_token"]
-  include_recipe "#{@cookbook_name}::token_generator"
+unless node['cassandra']['config']['num_tokens'] > 1
+  if node["cassandra"]["clustered"] and !node["cassandra"]["config"]["initial_token"]
+    include_recipe "#{@cookbook_name}::token_generator"
+  end
 end
 include_recipe "#{@cookbook_name}::configs"
 
