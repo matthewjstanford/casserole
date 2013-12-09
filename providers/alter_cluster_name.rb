@@ -9,7 +9,7 @@ action :run do
 
     conf = YAML.load_file('/etc/cassandra/conf/cassandra.yaml')
 
-    listen_address = conf['listen_address'] || node['ipaddress']
+    listen_address = conf['rpc_address'] || node['ipaddress']
     listen_port = conf['rpc_port'] || "9160"
 
     listen_address = '127.0.0.1' if listen_address == 'localhost'
