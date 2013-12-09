@@ -13,6 +13,7 @@ action :run do
     listen_port = conf['rpc_port'] || "9160"
 
     listen_address = '127.0.0.1' if listen_address == 'localhost'
+    listen_address = node['ipaddress'] if listen_address == '0.0.0.0'
 
     #cluster_name = new_resource.name.chars.map {|c| c.unpack('H*')}.join
 
