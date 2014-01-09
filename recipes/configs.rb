@@ -25,7 +25,7 @@ cgroup = node["cassandra"]["group"]
 home_dir = File.expand_path(node["cassandra"]["home_dir"])
 
 # If key_cache_size isn't set, set it according to the JVM heap size
-node.set_unless['cassandra']['config']['key_cache_size_in_mb'] = key_cache_size_mb
+#node.set_unless['cassandra']['config']['key_cache_size_in_mb'] = key_cache_size_mb
 
 directory conf_dir do
   owner cuser
