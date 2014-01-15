@@ -39,3 +39,11 @@ node["cassandra"]["chef_gems"].each do |pkg, attrs|
     version attrs["version"] if attrs["version"]
   end
 end
+
+# Install the metrics-graphite jar
+if node['cassandra']['metrics']['graphite']['enabled'] == true
+  cookbook_file "metrics-graphite-2.2.0.jar" do
+    path File.join(node['cassandra']['home_dir'], '/lib','metrics-graphite-2.2.0.jar')
+    action :create_if_missing
+  end
+end

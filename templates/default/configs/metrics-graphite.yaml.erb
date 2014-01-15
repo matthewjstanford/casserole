@@ -1,0 +1,16 @@
+<% if @enabled == true %>
+graphite:
+  -
+    period: <%= @period || 120 %>
+    timeunit: "<%= @timeunit || 'SECONDS' %>"
+    hosts:
+     - host: "<%= @host || '' %>"
+       port: <%= @port || 2003 %>
+    predicate:
+      color: "white"
+      useQualifiedName: <%= @predicate['white']['useQualifiedName'] || true %>
+      patterns:
+        <% @predicate['white']['patterns'].each do |p| %>
+        - "<%= p %>"
+        <% end -%>
+<% end -%>

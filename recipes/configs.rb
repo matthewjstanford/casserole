@@ -49,6 +49,45 @@ template "/etc/init.d/#{node["cassandra"]["name"]}" do
   notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
 
+graphite = node['cassandra']['metrics']['graphite']
+if graphite['enabled'] && graphite['host'].nil?
+  unless Chef::Config[:solo]
+    graphite_results = search(:node, graphite['host_query'])
+  
+    unless graphite_results.empty?
+      graphite_host = graphite_results[0]['ipaddress']
+    end
+  end
+end
+
+template "#{conf_dir}/metrics-graphite.yaml" do
+  owner cuser
+  group cgroup
+  mode "0755"
+  source "configs/metrics-graphite.yaml.erb"
+  action :create
+  variables(
+    :enabled => graphite['enabled'],
+    :period => graphite['period'],
+    :timeunit => graphite['timeunit'],
+    :host => graphite['host'] || graphite_host,
+    :predicate => graphite['predicate']
+  )
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
+end
+
+template "#{conf_dir}/cassandra-env.sh" do
+  owner cuser
+  group cgroup
+  mode "0755"
+  source "configs/cassandra-env.sh.erb"
+  action :create
+  variables(
+    :graphite_enabled => node['cassandra']['metrics']['graphite']['enabled']
+  )
+  notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
+end
+
 template "#{conf_dir}/cassandra.in.sh" do
   owner cuser
   group cgroup
