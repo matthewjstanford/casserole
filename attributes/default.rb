@@ -30,8 +30,10 @@ default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
-    "dsc20" => { "version" => "2.0.3-1" },
-    "opscenter" => { "version" => "4.0.1-2"},
+    "dsc20" => { "version" => "2.0.4-1" },
+    "datastax-agent" => {"version" => nil},
+    "jna" => {"version" => nil},
+#    "opscenter" => { "version" => "4.0.1-2"},
 }
 default["cassandra"]["chef_gems"] = {
 }
