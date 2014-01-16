@@ -83,7 +83,8 @@ template "#{conf_dir}/cassandra-env.sh" do
   source "configs/cassandra-env.sh.erb"
   action :create
   variables(
-    :graphite_enabled => node['cassandra']['metrics']['graphite']['enabled']
+    :graphite_enabled => node['cassandra']['metrics']['graphite']['enabled'],
+    :ipaddress => node['cassandra']['config']['rpc_address']
   )
   notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end
