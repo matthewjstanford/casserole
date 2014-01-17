@@ -48,7 +48,7 @@ default["cassandra"]["packages"] = {
 }
 default["cassandra"]["remote_files"] = {
     "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.0.0/jna-4.0.0.jar",
-              "destination" => File.join(node["cassandra"]["home_dir"],'/lib')},
+              "destination" => File.join(node["cassandra"]["home_dir"],'/lib/','jna-4.0.0.jar')},
 }
   
 default["cassandra"]["chef_gems"] = {
