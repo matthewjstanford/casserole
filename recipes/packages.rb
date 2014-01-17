@@ -40,6 +40,13 @@ node["cassandra"]["chef_gems"].each do |pkg, attrs|
   end
 end
 
+node["cassandra"]["remote_files"].each do |pkg, attrs|
+  remote_file pkg do
+    path attrs["destination"]
+    source attrs["source"]
+  end
+end
+
 # Install the metrics-graphite jar
 if node['cassandra']['metrics']['graphite']['enabled'] == true
   cookbook_file "metrics-graphite-2.2.0.jar" do

@@ -28,13 +28,27 @@ default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
 default["cassandra"]["node_id"] = node["fqdn"]
 
+# User settings
+default["cassandra"]["name"] = "cassandra"
+default["cassandra"]["user"] = "cassandra"
+default["cassandra"]["group"] = "cassandra"
+default["cassandra"]["home_dir"] = "/usr/share/cassandra"
+default["cassandra"]["limits"]["nofile"] = 100000
+default["cassandra"]["limits"]["memlock"] = 'unlimited'
+default["cassandra"]["limits"]["nproc"] = 32768
+default["cassandra"]["limits"]["as"] = 'unlimited'
+
 default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
     "dsc20" => { "version" => "2.0.4-1" },
     "datastax-agent" => {"version" => "4.0.2-1"},
-    "jna" => {"version" => nil},
+#    "jna" => {"version" => nil},
+}
+default["cassandra"]["remote_files"] = {
+    "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.0.0/jna-4.0.0.jar",
+              "destination" => File.join(node["cassandra"]["home_dir"],'/lib')},
 }
   
 default["cassandra"]["chef_gems"] = {
@@ -59,16 +73,6 @@ default["cassandra"]["default_datacenter"] = "DC1"
 default["cassandra"]["default_rack"] = "RAC1"
 default["cassandra"]["rackdc"]["prefer_local"] = false
 default["cassandra"]["seed_list"] = [node['ipaddress']]
-
-# User settings
-default["cassandra"]["name"] = "cassandra"
-default["cassandra"]["user"] = "cassandra"
-default["cassandra"]["group"] = "cassandra"
-default["cassandra"]["home_dir"] = "/usr/share/cassandra"
-default["cassandra"]["limits"]["nofile"] = 100000
-default["cassandra"]["limits"]["memlock"] = 'unlimited'
-default["cassandra"]["limits"]["nproc"] = 32768
-default["cassandra"]["limits"]["as"] = 'unlimited'
 
 # Graphite metrics
 default['cassandra']['metrics']['graphite']['enabled'] = false
