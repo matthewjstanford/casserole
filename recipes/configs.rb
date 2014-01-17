@@ -84,7 +84,9 @@ template "#{conf_dir}/cassandra-env.sh" do
   action :create
   variables(
     :graphite_enabled => node['cassandra']['metrics']['graphite']['enabled'],
-    :ipaddress => node['cassandra']['config']['rpc_address']
+    :ipaddress => node['cassandra']['config']['rpc_address'],
+    :max_heap_size => node['cassandra']['java']['MAX_HEAP_SIZE'],
+    :heap_newsize => node['cassandra']['java']['HEAP_NEWSIZE']
   )
   notifies :restart, "service[#{node["cassandra"]["name"]}]", :delayed
 end

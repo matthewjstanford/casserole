@@ -1,0 +1,31 @@
+# opscenterd.conf
+
+[webserver]
+port = <%= @port %>
+interface = <%= @ipaddress %>
+# The following settings can be used to enable ssl support for the opscenter
+# web application. Change these values to point to the ssl certificate and key
+# that you wish to use for your OpsCenter install, as well as the port you would like
+# to serve ssl traffic from.
+#ssl_keyfile = /var/lib/opscenter/ssl/opscenter.key
+#ssl_certfile = /var/lib/opscenter/ssl/opscenter.pem
+#ssl_port = 8443
+
+[logging]
+# level may be TRACE, DEBUG, INFO, WARN, or ERROR
+<% if @log_level.nil? -%>
+#level = INFO
+<% else -%>
+level = <%= @log_level %>
+<% end -%>
+
+[authentication]
+# if this file does not exist, there will be no password protection. Use the
+# set_passwd.py tool (included with OpsCenter) to set passwords. This property will
+# default to /etc/opscenter/.passwd in packaged installations and ./passwds in
+# tarball installations.
+<% if @passwd_file.nil? -%>
+#passwd_file =
+<% else -%>
+passwd_file = <%= @passwd_file %>
+<% end -%>

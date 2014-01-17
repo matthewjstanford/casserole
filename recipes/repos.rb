@@ -24,36 +24,6 @@ when "rhel"
   include_recipe "yum"
   include_recipe "yum::epel" if major_ver == 5
 
-# -  node["cassandra"]["repos"].each do |name, attrs|
-# -    yum_key "RPM-GPG-KEY-#{name}" do
-# -      url attrs["key"]
-# -      action :add
-# -      only_if { attrs["key"] }
-# -    end
-# +  if node["cassandra"]["edition"] == "enterprise"
-# +    node.default["cassandra"]["repos"]["datastax"] = {
-# +      "description" => "DataStax Repo for Apache Cassandra",
-# +      "url"         => "http://#{node["cassandra"]["enterprise"]["username"]}:#{node["cassandra"]["enterprise"]["password"]}@rpm.datastax.com/enterprise",
-# +      "key"         => nil,
-# +      "components"  => nil,
-# +      "gpgcheck"    => false
-# +    }
-# +    v = node["cassandra"]["packages"]["dsc20"]["version"]
-# +    node.normal["cassandra"]["packages"].delete("dsc20")
-# +    node.normal["cassandra"]["packages"]["dse-full"] = {'version' => node["cassandra"]["enterprise"]["version"]}
-# +  end
-# 
-# +  node["cassandra"]["repos"].each do |name, attrs|
-     # yum_repository name do
-       # description attrs["description"]
-# -      url attrs["url"]
-# -      key "RPM-GPG-KEY-#{name}" if attrs["key"]
-# -      action :add
-# +      baseurl attrs["url"]
-# +      gpgkey attrs["key"] if attrs["key"]
-# +      gpgcheck false unless attrs["key"]
-# +      action :create
-
   node["cassandra"]["repos"].each do |name, attrs|
 
     yum_repository name do

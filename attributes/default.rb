@@ -21,6 +21,8 @@
 normal["java"]["install_flavor"] = "oracle"
 normal["java"]["oracle"]["accept_oracle_download_terms"] = true
 normal['java']['jdk_version'] = "7"
+default["cassandra"]["java"]["MAX_HEAP_SIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
+default["cassandra"]["java"]["HEAP_NEWSIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
 
 default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
@@ -31,14 +33,20 @@ default["cassandra"]["build_packages"] = []
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
     "dsc20" => { "version" => "2.0.4-1" },
-    "datastax-agent" => {"version" => nil},
+    "datastax-agent" => {"version" => "4.0.2-1"},
     "jna" => {"version" => nil},
-#    "opscenter" => { "version" => "4.0.1-2"},
 }
+  
 default["cassandra"]["chef_gems"] = {
 }
 
-default["cassandra"]["extra_services"] = ["opscenterd"]
+default["cassandra"]["extra_services"] = ["datastax-agent"]
+
+default["cassandra"]["opscenter"]["packages"] = {
+    "opscenter" => { "version" => "4.0.2-1"},
+}
+default["cassandra"]["opscenter"]["port"] = 8888
+default["cassandra"]["opscenter"]["ipaddress"] = "0.0.0.0"
 
 # Cluster definition attributes can be overridden by the data bags that
 # data_bag_parser.rb merges in, or by higher precedence attributes applied

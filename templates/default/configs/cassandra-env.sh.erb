@@ -1,3 +1,4 @@
+# Chef Generated file
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -129,8 +130,14 @@ esac
 # times. If in doubt, and if you do not particularly want to tweak, go with
 # 100 MB per physical CPU core.
 
+<% if @max_heap_size.nil? || @heap_newsize.nil? -%>
 #MAX_HEAP_SIZE="4G"
 #HEAP_NEWSIZE="800M"
+<% else -%>
+MAX_HEAP_SIZE="<%= @max_heap_size %>"
+HEAP_NEWSIZE="<%= @heap_newsize %>"
+<% end -%>
+
 
 # Set this to control the amount of arenas per-thread in glibc
 #MALLOC_ARENA_MAX=4
