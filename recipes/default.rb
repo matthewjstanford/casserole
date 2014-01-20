@@ -22,6 +22,7 @@ include_recipe "ntp"
 include_recipe "#{@cookbook_name}::user"
 include_recipe "#{@cookbook_name}::repos"
 include_recipe "#{@cookbook_name}::packages"
+include_recipe "#{@cookbook_name}::ephemeral_disks"
 include_recipe "java" # Java needs to be after packages, in case OpenJDK gets installed by the packages
 
 if node["cassandra"]["clustered"] and node["cassandra"]["data_bag"]
@@ -42,4 +43,12 @@ include_recipe "#{@cookbook_name}::configs"
     supports :restart => true, :status => true
     action [:enable, :start]
   end
+end
+
+# If the ephemeral disks were blank we'll need to issue a rebuild
+bash "nodetool rebuild" do
+  command "nodetool rebuild"
+  timeout 600
+
+  only_if { node["cassandra"]["nodetool_rebuild"] }
 end

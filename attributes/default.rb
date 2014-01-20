@@ -28,6 +28,8 @@ default["cassandra"]["clustered"] = false
 default["cassandra"]["data_bag"] = nil
 default["cassandra"]["node_id"] = node["fqdn"]
 
+default["cassandra"]["nodetool_rebuild"] = false # Perform a "nodetool rebuild" after this chef run
+
 # User settings
 default["cassandra"]["name"] = "cassandra"
 default["cassandra"]["user"] = "cassandra"
@@ -44,7 +46,6 @@ default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
     "dsc20" => { "version" => "2.0.4-1" },
     "datastax-agent" => {"version" => "4.0.2-1"},
-#    "jna" => {"version" => nil},
 }
 default["cassandra"]["remote_files"] = {
     "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.0.0/jna-4.0.0.jar",
@@ -112,3 +113,12 @@ default["cassandra"]["repos"] = {
   }
 }
 
+# ephemeral disk commands
+default["cassandra"]["ephemeral_disks"]["format_command"]   = 'echo y | mkfs.ext4'
+default["cassandra"]["ephemeral_disks"]["fs_check_command"] = 'dumpe2fs'
+default["cassandra"]["ephemeral_disks"]["mount_options"]    = 'noatime,data=writeback,nobh'
+default["cassandra"]["ephemeral_disks"]["mount_path"]       = {'/dev/sdc' => '/var/lib/cassandra',
+                                                               '/dev/sdd' => '/var/lib/cassandra_d',
+                                                               '/dev/sde' => '/var/lib/cassandra_e',
+                                                               '/dev/sdf' => '/var/lib/cassandra_f'}
+default["cassandra"]["ephemeral_disks"]["manual_disks"]     = {}
