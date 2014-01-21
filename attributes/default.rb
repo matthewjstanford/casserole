@@ -75,19 +75,6 @@ default["cassandra"]["default_rack"] = "RAC1"
 default["cassandra"]["rackdc"]["prefer_local"] = false
 default["cassandra"]["seed_list"] = [node['ipaddress']]
 
-# Graphite metrics
-default['cassandra']['metrics']['graphite']['enabled'] = false
-default['cassandra']['metrics']['graphite']['period'] = 15
-default['cassandra']['metrics']['graphite']['timeunit'] = 'SECONDS'
-default['cassandra']['metrics']['graphite']['host'] = nil # If set will not perform chef search
-default['cassandra']['metrics']['graphite']['host_query'] = "role:graphite_server AND chef_environment:#{node.chef_environment}"
-default['cassandra']['metrics']['graphite']['port'] = 2003
-default['cassandra']['metrics']['graphite']['predicate']['white']['useQualifiedName'] = true
-default['cassandra']['metrics']['graphite']['predicate']['white']['patterns'] = ["^org.apache.cassandra.metrics.Cache.+",
-                                                                                "^org.apache.cassandra.metrics.ClientRequest.+",
-                                                                                "^org.apache.cassandra.metrics.Storage.+",
-                                                                                "^org.apache.cassandra.metrics.ThreadPools.+" ]
-
 case node["platform_family"]
 when "rhel"
   ds_url = "http://rpm.datastax.com/community"
@@ -112,13 +99,3 @@ default["cassandra"]["repos"] = {
     "components" => ds_components
   }
 }
-
-# ephemeral disk commands
-default["cassandra"]["ephemeral_disks"]["format_command"]   = 'echo y | mkfs.ext4'
-default["cassandra"]["ephemeral_disks"]["fs_check_command"] = 'dumpe2fs'
-default["cassandra"]["ephemeral_disks"]["mount_options"]    = 'noatime,data=writeback,nobh'
-default["cassandra"]["ephemeral_disks"]["mount_path"]       = {'/dev/sdc' => '/var/lib/cassandra',
-                                                               '/dev/sdd' => '/var/lib/cassandra_d',
-                                                               '/dev/sde' => '/var/lib/cassandra_e',
-                                                               '/dev/sdf' => '/var/lib/cassandra_f'}
-default["cassandra"]["ephemeral_disks"]["manual_disks"]     = {}
