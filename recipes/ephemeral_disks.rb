@@ -13,7 +13,8 @@ if node.has_key?('ec2')
       :mount_path         => defaults["mount_path"][device],
       :mount_options      => defaults["mount_options"],
       :mount              => true,
-      :format             => true
+      :format             => true,
+      :ephemeral_number   => key[-1]
     }
   end
 end
@@ -35,7 +36,7 @@ ephemeral_disks.select {|device,params| params[:format] && params[:mount]}.value
   data_file_directories << File.join(params[:mount_path],'/data/')
 end
 
-node.set['cassandra']['config']['data_file_directories'] = data_file_directories unless data_file_directories.empty?
+node.override['cassandra']['config']['data_file_directories'] = data_file_directories unless data_file_directories.empty?
 
 ephemeral_disks.each do |device,params|
   # Format volume if format command is provided and volume is unformatted
@@ -59,13 +60,25 @@ ephemeral_disks.each do |device,params|
     mode 0755
   end
 
+  execute "Backup /etc/fstab" do
+    command "cp /etc/fstab /etc/fstab.backup"
+    not_if { File.exists?("/etc/fstab.backup")}
+  end
+
+  # Remove the default EC2 entry
+  execute "Remove default ephemeral mount #{device} from fstab" do
+    command "sed -i '/^#{device.gsub(/\//,'\/')}.*comment=cloudconfig/ s/^/# /' /etc/fstab"
+  end
+
   # Mount device to data path
   mount "#{device}-to-#{params[:mount_path]}" do
     mount_point params[:mount_path]
+    fstype  'auto'
     device  device
-    fstype  params[:file_system]
     options params[:mount_options]
     action  [:mount, :enable]
+    pass    0
+    dump    0
 
     only_if { File.exists?(device) && params[:mount] }
   end

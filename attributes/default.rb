@@ -18,9 +18,9 @@
 #
 
 # Override OpenJDK to Oracle Java instead
-normal["java"]["install_flavor"] = "oracle"
-normal["java"]["oracle"]["accept_oracle_download_terms"] = true
-normal['java']['jdk_version'] = "7"
+override["java"]["install_flavor"] = "oracle"
+override["java"]["oracle"]["accept_oracle_download_terms"] = true
+override['java']['jdk_version'] = "7"
 default["cassandra"]["java"]["MAX_HEAP_SIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
 default["cassandra"]["java"]["HEAP_NEWSIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
 
