@@ -70,11 +70,17 @@ ephemeral_disks.each do |device,params|
     command "sed -i '/^#{device.gsub(/\//,'\/')}.*comment=cloudconfig/ s/^/# /' /etc/fstab"
   end
 
+  if File.exists?("/dev/#{device.sub('sd','xvd')}")
+    ec2_device = device.sub('sd','xvd')
+  else
+    ec2_device = device
+  end
+
   # Mount device to data path
-  mount "#{device}-to-#{params[:mount_path]}" do
+  mount "#{ec2_device}-to-#{params[:mount_path]}" do
     mount_point params[:mount_path]
     fstype  'auto'
-    device  device
+    device  ec2_device
     options params[:mount_options]
     action  [:mount, :enable]
     pass    0
