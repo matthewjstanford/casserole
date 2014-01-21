@@ -70,7 +70,7 @@ ephemeral_disks.each do |device,params|
     command "sed -i '/^#{device.gsub(/\//,'\/')}.*comment=cloudconfig/ s/^/# /' /etc/fstab"
   end
 
-  if File.exists?("/dev/#{device.sub('sd','xvd')}")
+  if File.exists?(device.sub('sd','xvd'))
     ec2_device = device.sub('sd','xvd')
   else
     ec2_device = device
