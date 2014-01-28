@@ -9,7 +9,7 @@ version           "0.2.8"
 depends           "yum", "~> 3.0"
 depends           "apt"
 depends           "java", "~> 1.15"
-depends           "sysctl"
+depends           "sysctl", "~> 0.3"
 depends           "ulimit"
 depends           "ntp"
 
