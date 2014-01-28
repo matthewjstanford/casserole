@@ -21,24 +21,25 @@
 override["java"]["install_flavor"] = "oracle"
 override["java"]["oracle"]["accept_oracle_download_terms"] = true
 override['java']['jdk_version'] = "7"
-default["cassandra"]["java"]["MAX_HEAP_SIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
-default["cassandra"]["java"]["HEAP_NEWSIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
 
-default["cassandra"]["clustered"] = false
-default["cassandra"]["data_bag"] = nil
-default["cassandra"]["node_id"] = node["fqdn"]
+default["cassandra"]["java"]["MAX_HEAP_SIZE"] = nil # set to '4G' or whatever to override the logic in the cassandra-env file
+default["cassandra"]["java"]["HEAP_NEWSIZE"]  = nil # set to '4G' or whatever to override the logic in the cassandra-env file
+
+default["cassandra"]["clustered"]   = false
+default["cassandra"]["data_bag"]    = nil
+default["cassandra"]["node_id"]     = node["fqdn"]
 
 default["cassandra"]["nodetool_rebuild"] = false # Perform a "nodetool rebuild" after this chef run
 
 # User settings
-default["cassandra"]["name"] = "cassandra"
-default["cassandra"]["user"] = "cassandra"
-default["cassandra"]["group"] = "cassandra"
-default["cassandra"]["home_dir"] = "/usr/share/cassandra"
-default["cassandra"]["limits"]["nofile"] = 100000
+default["cassandra"]["name"]              = "cassandra"
+default["cassandra"]["user"]              = "cassandra"
+default["cassandra"]["group"]             = "cassandra"
+default["cassandra"]["home_dir"]          = "/usr/share/cassandra"
+default["cassandra"]["limits"]["nofile"]  = 100000
 default["cassandra"]["limits"]["memlock"] = 'unlimited'
-default["cassandra"]["limits"]["nproc"] = 32768
-default["cassandra"]["limits"]["as"] = 'unlimited'
+default["cassandra"]["limits"]["nproc"]   = 32768
+default["cassandra"]["limits"]["as"]      = 'unlimited'
 
 default["cassandra"]["build_packages"] = []
 
