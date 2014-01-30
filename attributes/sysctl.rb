@@ -14,6 +14,7 @@ default['sysctl']['params']['net']['ipv4']['tcp_keepalive_probes']  = 9
 default['sysctl']['params']['net']['ipv4']['tcp_keepalive_time']    = 300
 
 default['sysctl']['params']['vm']['swappiness']                     = 0
+default['sysctl']['params']['vm']['max_map_count']                  = 131072
 default['sysctl']['params']['vm']['min_free_kbytes']                = 65536               # Keep 64 MB free on the system
 default['sysctl']['params']['net']['ipv4']['tcp_window_scaling']    = 1                   # should be enabled by default
 default['sysctl']['params']['net']['ipv4']['tcp_max_syn_backlog']   = 2048

@@ -45,7 +45,7 @@ default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
-    "dsc20" => { "version" => "2.0.4-1" },
+    "dsc20" => { "version" => "2.0.4-2" },
     "datastax-agent" => {"version" => "4.0.2-1"},
 }
 default["cassandra"]["remote_files"] = {
