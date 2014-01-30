@@ -36,10 +36,6 @@ default["cassandra"]["name"]              = "cassandra"
 default["cassandra"]["user"]              = "cassandra"
 default["cassandra"]["group"]             = "cassandra"
 default["cassandra"]["home_dir"]          = "/usr/share/cassandra"
-default["cassandra"]["limits"]["nofile"]  = 100000
-default["cassandra"]["limits"]["memlock"] = 'unlimited'
-default["cassandra"]["limits"]["nproc"]   = 32768
-default["cassandra"]["limits"]["as"]      = 'unlimited'
 
 default["cassandra"]["build_packages"] = []
 
