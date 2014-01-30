@@ -38,7 +38,8 @@ end
 
 node.override['cassandra']['config']['data_file_directories'] = data_file_directories unless data_file_directories.empty?
 
-ephemeral_disks.each do |device,params|
+# Only work on the disk if we chose to mount it
+ephemeral_disks.select {|device,params| params[:mount]}.each do |device,params|
   # Format volume if format command is provided and volume is unformatted
   bash "Format device: #{device}" do
     __command  = "#{params[:format_command]} #{device}"
@@ -68,6 +69,7 @@ ephemeral_disks.each do |device,params|
   # Remove the default EC2 entry
   execute "Remove default ephemeral mount #{device} from fstab" do
     command "sed -i '/^#{device.gsub(/\//,'\/')}.*comment=cloudconfig/ s/^/# /' /etc/fstab"
+    only_if { File.exists?(device) && params[:mount] }
   end
 
   if File.exists?(device.sub('sd','xvd'))
@@ -95,8 +97,8 @@ ephemeral_disks.each do |device,params|
       owner node["cassandra"]["user"]
       group node["cassandra"]["group"]
       mode 0755
-      only_if "grep #{node["cassandra"]["user"]} /etc/passwd"
-      only_if { params[:mount] }
+      only_if "grep #{node["cassandra"]["user"]} /etc/passwd" && { params[:mount]}
+      #only_if { params[:mount] }
     end
   end
 end
