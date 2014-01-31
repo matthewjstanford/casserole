@@ -22,7 +22,7 @@ include_recipe "ntp"
 include_recipe "#{@cookbook_name}::user"
 include_recipe "#{@cookbook_name}::repos"
 include_recipe "#{@cookbook_name}::packages"
-include_recipe "#{@cookbook_name}::ephemeral_disks"
+include_recipe "#{@cookbook_name}::ephemeral_disks" if node["cassandra"]["ephemeral_disks"]["auto_configure"]
 include_recipe "java" # Java needs to be after packages, in case OpenJDK gets installed by the packages
 
 if node["cassandra"]["clustered"] and node["cassandra"]["data_bag"]

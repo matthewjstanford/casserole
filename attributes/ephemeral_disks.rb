@@ -1,4 +1,5 @@
 # ephemeral disk commands
+default["cassandra"]["ephemeral_disks"]["auto_configure"]   = true
 default["cassandra"]["ephemeral_disks"]["format_command"]   = 'echo y | mkfs.ext4'
 default["cassandra"]["ephemeral_disks"]["fs_check_command"] = 'dumpe2fs'
 default["cassandra"]["ephemeral_disks"]["mount_options"]    = 'noatime,data=writeback,nobh'
