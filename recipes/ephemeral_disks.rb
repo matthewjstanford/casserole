@@ -99,8 +99,8 @@ ephemeral_disks.select {|device,params| params['mount']}.each do |device,params|
       owner node["cassandra"]["user"]
       group node["cassandra"]["group"]
       mode 0755
-      only_if "grep #{node["cassandra"]["user"]} /etc/passwd" && { params[:mount]}
-      #only_if { params[:mount] }
+      #only_if "grep #{node["cassandra"]["user"]} /etc/passwd" && { params[:mount]}
+      only_if { params[:mount] }
     end
   end
 end
