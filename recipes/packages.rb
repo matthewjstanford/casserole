@@ -20,7 +20,7 @@
 service node["cassandra"]["name"]
 
 node["cassandra"]["build_packages"].each do |pkg|
-  p = package "#{pkg}" do
+  p = package pkg do
     action :nothing
   end
   p.run_action(:install)
@@ -48,9 +48,8 @@ node["cassandra"]["remote_files"].each do |pkg, attrs|
 end
 
 # Install the metrics-graphite jar
-if node['cassandra']['metrics']['graphite']['enabled'] == true
-  cookbook_file "metrics-graphite-2.2.0.jar" do
-    path File.join(node['cassandra']['home_dir'], '/lib','metrics-graphite-2.2.0.jar')
-    action :create_if_missing
-  end
+cookbook_file "metrics-graphite-2.2.0.jar" do
+  path File.join(node['cassandra']['home_dir'], '/lib','metrics-graphite-2.2.0.jar')
+  action :create_if_missing
+  only_if {node['cassandra']['metrics']['graphite']['enabled'] == true}
 end

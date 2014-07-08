@@ -67,8 +67,7 @@ script "update_keystore" do
   EOH
   action :run
   only_if do
-    %x{$JAVA_HOME/bin/keytool -list -alias casserole -keystore #{keystore} \
-      -storepass #{keystore_password}}
+    Mixlib::ShellOut.new(%x{$JAVA_HOME/bin/keytool -list -alias casserole -keystore #{keystore} -storepass #{keystore_password}})
     $?.exitstatus != 0
   end
 end

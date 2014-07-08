@@ -41,8 +41,8 @@ default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
-    "dsc20" => { "version" => "2.0.6-1" },
-    "datastax-agent" => {"version" => "4.1.1-1"},
+    "dsc20" => { "version" => "2.0.8-2" },
+    "datastax-agent" => {"version" => "4.1.4-1"},
 }
 default["cassandra"]["remote_files"] = {
     "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.1.0/jna-4.1.0.jar",

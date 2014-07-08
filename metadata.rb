@@ -1,4 +1,4 @@
-name              "casserole"
+name              "cassandra"
 maintainer        "Jonathan Hartman"
 maintainer_email  "j@p4nt5.com"
 license           "Apache v2.0"

@@ -39,6 +39,8 @@ action :run do
     code "nodetool flush"
     action :nothing
   end
+
+  new_resource.updated_by_last_action(true)
 end
 
 action :nothing do
