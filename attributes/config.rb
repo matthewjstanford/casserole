@@ -32,6 +32,9 @@ default['cassandra']['config']['num_tokens'] = 256
 # that do not have vnodes enabled.
 default['cassandra']['config']['initial_token'] = nil
 
+# May either be "true" or "false" to enable globally, or contain a list
+# of data centers to enable per-datacenter.
+# hinted_handoff_enabled: DC1,DC2
 # See http://wiki.apache.org/cassandra/HintedHandoff
 default['cassandra']['config']['hinted_handoff_enabled'] = true
 # this defines the maximum amount of time a dead host will have hints
@@ -49,10 +52,9 @@ default['cassandra']['config']['hinted_handoff_throttle_in_kb'] = 1024
 # cross-dc handoff tends to be slower
 default['cassandra']['config']['max_hints_delivery_threads'] = 2
 
-# The following setting populates the page cache on memtable flush and compaction
-# WARNING: Enable this setting only when the whole node's data fits in memory.
-# Defaults to: false
-default['cassandra']['config']['populate_io_cache_on_flush'] = false
+# Maximum throttle in KBs per second, total. This will be
+# reduced proportionally to the number of nodes in the cluster.
+default['cassandra']['config']['batchlog_replay_throttle_in_kb'] = 1024
 
 # Authentication backend, implementing IAuthenticator; used to identify users
 # Out of the box, Cassandra provides org.apache.cassandra.auth.{AllowAllAuthenticator,
@@ -79,27 +81,16 @@ default['cassandra']['config']['authorizer'] = 'AllowAllAuthorizer'
 # Will be disabled automatically for AllowAllAuthorizer.
 default['cassandra']['config']['permissions_validity_in_ms'] = 2000
 
-# The partitioner is responsible for distributing rows (by key) across
-# nodes in the cluster.  Any IPartitioner may be used, including your
-# own as long as it is on the classpath.  Out of the box, Cassandra
-# provides org.apache.cassandra.dht.{Murmur3Partitioner, RandomPartitioner
-# ByteOrderedPartitioner, OrderPreservingPartitioner (deprecated)}.
-# 
-# - RandomPartitioner distributes rows across the cluster evenly by md5.
-#   This is the default prior to 1.2 and is retained for compatibility.
-# - Murmur3Partitioner is similar to RandomPartioner but uses Murmur3_128
-#   Hash Function instead of md5.  When in doubt, this is the best option.
-# - ByteOrderedPartitioner orders rows lexically by key bytes.  BOP allows
-#   scanning rows in key order, but the ordering can generate hot spots
-#   for sequential insertion workloads.
-# - OrderPreservingPartitioner is an obsolete form of BOP, that stores
-# - keys in a less-efficient format and only works with keys that are
-#   UTF8-encoded Strings.
-# - CollatingOPP collates according to EN,US rules rather than lexical byte
-#   ordering.  Use this as an example if you need custom collation.
+# The partitioner is responsible for distributing groups of rows (by
+# partition key) across nodes in the cluster.  You should leave this
+# alone for new clusters.  The partitioner can NOT be changed without
+# reloading all data, so when upgrading you should set this to the
+# same partitioner you were already using.
 #
-# See http://wiki.apache.org/cassandra/Operations for more on
-# partitioners and token selection.
+# Besides Murmur3Partitioner, partitioners included for backwards
+# compatibility include RandomPartitioner, ByteOrderedPartitioner, and
+# OrderPreservingPartitioner.
+#
 default['cassandra']['config']['partitioner'] = 'org.apache.cassandra.dht.Murmur3Partitioner'
 
 # Directories where Cassandra should store data on disk.  Cassandra
@@ -111,6 +102,7 @@ default['cassandra']['config']['data_file_directories'] = ['/var/lib/cassandra/d
 default['cassandra']['config']['commitlog_directory'] = '/var/lib/cassandra/commitlog'
 
 # policy for data disk failures:
+# stop_paranoid: shut down gossip and Thrift even for single-sstable errors.
 # stop: shut down gossip and Thrift, leaving the node effectively dead, but
 #       can still be inspected via JMX.
 # best_effort: stop using the failed disk and respond to requests based on
@@ -118,6 +110,14 @@ default['cassandra']['config']['commitlog_directory'] = '/var/lib/cassandra/comm
 #              data at CL.ONE!
 # ignore: ignore fatal errors and let requests fail, as in pre-1.2 Cassandra
 default['cassandra']['config']['disk_failure_policy'] = 'stop'
+
+# policy for commit disk failures:
+# stop: shut down gossip and Thrift, leaving the node effectively dead, but
+#       can still be inspected via JMX.
+# stop_commit: shutdown the commit log, letting writes collect but 
+#              continuing to service reads, as in pre-2.0.5 Cassandra
+# ignore: ignore fatal errors and let the batches fail
+default['cassandra']['config']['commit_failure_policy'] = 'stop'
 
 # Maximum size of the key cache in memory.
 #
@@ -249,7 +249,7 @@ default['cassandra']['config']['file_cache_size_in_mb'] = 512
 
 # Total memory to use for memtables.  Cassandra will flush the largest
 # memtable when this much memory is used.
-# If omitted, Cassandra will set it to 1/3 of the heap.
+# If omitted, Cassandra will set it to 1/4 of the heap.
 default['cassandra']['config']['memtable_total_space_in_mb'] = 2048
 
 # Total space to use for commitlogs.  Since commitlog segments are
@@ -432,6 +432,10 @@ default['cassandra']['config']['tombstone_failure_threshold'] = 100000
 # that wastefully either.
 default['cassandra']['config']['column_index_size_in_kb'] = 64
 
+# Log WARN on any batch size exceeding this value. 5kb per batch by default.
+# Caution should be taken on increasing the size of this threshold as it can lead to node instability.
+default['cassandra']['config']['batch_size_warn_threshold_in_kb'] = 5
+
 # Size limit for rows being compacted in memory.  Larger rows will spill
 # over to disk and use a slower two-pass compaction process.  A message
 # will be logged specifying the row key.
@@ -532,23 +536,18 @@ default['cassandra']['config']['phi_convict_threshold'] = nil
 #
 # Out of the box, Cassandra provides
 #  - SimpleSnitch:
-#    Treats Strategy order as proximity. This improves cache locality
-#    when disabling read repair, which can further improve throughput.
-#    Only appropriate for single-datacenter deployments.
+#    Treats Strategy order as proximity. This can improve cache
+#    locality when disabling read repair.  Only appropriate for
+#    single-datacenter deployments.
+#  - GossipingPropertyFileSnitch
+#    This should be your go-to snitch for production use.  The rack
+#    and datacenter for the local node are defined in
+#    cassandra-rackdc.properties and propagated to other nodes via
+#    gossip.  If cassandra-topology.properties exists, it is used as a
+#    fallback, allowing migration from the PropertyFileSnitch.
 #  - PropertyFileSnitch:
 #    Proximity is determined by rack and data center, which are
 #    explicitly configured in cassandra-topology.properties.
-#  - GossipingPropertyFileSnitch
-#    The rack and datacenter for the local node are defined in
-#    cassandra-rackdc.properties and propagated to other nodes via gossip.  If
-#    cassandra-topology.properties exists, it is used as a fallback, allowing
-#    migration from the PropertyFileSnitch.
-#  - RackInferringSnitch:
-#    Proximity is determined by rack and data center, which are
-#    assumed to correspond to the 3rd and 2nd octet of each node's
-#    IP address, respectively.  Unless this happens to match your
-#    deployment conventions (as it did Facebook's), this is best used
-#    as an example of writing a custom Snitch class.
 #  - Ec2Snitch:
 #    Appropriate for EC2 deployments in a single Region. Loads Region
 #    and Availability Zone information from the EC2 API. The Region is
@@ -562,6 +561,12 @@ default['cassandra']['config']['phi_convict_threshold'] = nil
 #    ssl_storage_port on the public IP firewall.  (For intra-Region
 #    traffic, Cassandra will switch to the private IP after
 #    establishing a connection.)
+#  - RackInferringSnitch:
+#    Proximity is determined by rack and data center, which are
+#    assumed to correspond to the 3rd and 2nd octet of each node's IP
+#    address, respectively.  Unless this happens to match your
+#    deployment conventions, this is best used as an example of
+#    writing a custom Snitch class and is provided in that spirit.
 #
 # You can use a custom Snitch by setting this to the full class name
 # of the snitch, which will be assumed to be on your classpath.
@@ -627,6 +632,7 @@ default['cassandra']['config']['request_scheduler_id'] = 'keyspace'
 # Default settings are TLS v1, RSA 1024-bit keys (it is imperative that
 # users generate their own keys) TLS_RSA_WITH_AES_128_CBC_SHA as the cipher
 # suite for authentication, key exchange and encryption of the actual data transfers.
+# Use the DHE/ECDHE ciphers if running in FIPS 140 compliant mode.
 # NOTE: No custom encryption options are enabled at the moment
 # The available internode options are : all, none, dc, rack
 #
@@ -646,7 +652,7 @@ default['cassandra']['config']['server_encryption_options']['truststore_password
 default['cassandra']['config']['server_encryption_options']['protocol']             = 'TLS'
 default['cassandra']['config']['server_encryption_options']['algorithm']            = 'SunX509'
 default['cassandra']['config']['server_encryption_options']['store_type']           = 'JKS'
-default['cassandra']['config']['server_encryption_options']['cipher_suites']        = ['TLS_RSA_WITH_AES_128_CBC_SHA','TLS_RSA_WITH_AES_256_CBC_SHA']
+default['cassandra']['config']['server_encryption_options']['cipher_suites']        = %w(TLS_RSA_WITH_AES_128_CBC_SHA TLS_RSA_WITH_AES_256_CBC_SHA TLS_DHE_RSA_WITH_AES_128_CBC_SHA TLS_DHE_RSA_WITH_AES_256_CBC_SHA TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA)
 default['cassandra']['config']['server_encryption_options']['require_client_auth']  = false
 
 # enable or disable client/server encryption.
@@ -661,7 +667,7 @@ default['cassandra']['config']['client_encryption_options']['truststore_password
 default['cassandra']['config']['client_encryption_options']['protocol']             = 'TLS'
 default['cassandra']['config']['client_encryption_options']['algorithm']            = 'SunX509'
 default['cassandra']['config']['client_encryption_options']['store_type']           = 'JKS'
-default['cassandra']['config']['client_encryption_options']['cipher_suites']        = ['TLS_RSA_WITH_AES_128_CBC_SHA','TLS_RSA_WITH_AES_256_CBC_SHA']
+default['cassandra']['config']['client_encryption_options']['cipher_suites']        = %w(TLS_RSA_WITH_AES_128_CBC_SHA TLS_RSA_WITH_AES_256_CBC_SHA TLS_DHE_RSA_WITH_AES_128_CBC_SHA TLS_DHE_RSA_WITH_AES_256_CBC_SHA TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA)
 
 # internode_compression controls whether traffic between nodes is
 # compressed.
