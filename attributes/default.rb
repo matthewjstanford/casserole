@@ -41,12 +41,12 @@ default["cassandra"]["build_packages"] = []
 
 default["cassandra"]["packages"] = {
     "python-cql" => { "version" => "1.4.0-2" },
-    "dsc20" => { "version" => "2.0.8-2" },
-    "datastax-agent" => {"version" => "4.1.4-1"},
+    "dsc20" => { "version" => "2.1.2-1" },
+    "datastax-agent" => {"version" => "5.0.2-1"},
 }
 default["cassandra"]["remote_files"] = {
-    "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.1.0/jna-4.1.0.jar",
-              "destination" => File.join(node["cassandra"]["home_dir"],'/lib/','jna-4.1.0.jar')},
+#    "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.1.0/jna-4.1.0.jar",
+#              "destination" => File.join(node["cassandra"]["home_dir"],'/lib/','jna-4.1.0.jar')},
 }
   
 default["cassandra"]["chef_gems"] = {
@@ -55,7 +55,7 @@ default["cassandra"]["chef_gems"] = {
 default["cassandra"]["extra_services"] = ["datastax-agent"]
 
 default["cassandra"]["opscenter"]["packages"] = {
-    "opscenter" => { "version" => "4.1.1-1"},
+    "opscenter-free" => { "version" => "3.2.2-1"},
 }
 default["cassandra"]["opscenter"]["port"] = 8888
 default["cassandra"]["opscenter"]["ipaddress"] = "0.0.0.0"

@@ -20,7 +20,8 @@ default['cassandra']['config']['cluster_name'] = 'Casserole Cluster'
 # If you leave this unspecified, Cassandra will use the default of 1 token for legacy compatibility,
 # and will use the initial_token as described below.
 #
-# Specifying initial_token will override this setting.
+# Specifying initial_token will override this setting on the node's initial start,
+# on subsequent starts, this setting will apply even if initial token is set.
 #
 # If you already have a cluster with 1 token per node, and wish to migrate to 
 # multiple tokens per node, see http://wiki.apache.org/cassandra/Operations
@@ -32,10 +33,10 @@ default['cassandra']['config']['num_tokens'] = 256
 # that do not have vnodes enabled.
 default['cassandra']['config']['initial_token'] = nil
 
+# See http://wiki.apache.org/cassandra/HintedHandoff
 # May either be "true" or "false" to enable globally, or contain a list
 # of data centers to enable per-datacenter.
 # hinted_handoff_enabled: DC1,DC2
-# See http://wiki.apache.org/cassandra/HintedHandoff
 default['cassandra']['config']['hinted_handoff_enabled'] = true
 # this defines the maximum amount of time a dead host will have hints
 # generated.  After it has been dead this long, new hints for it will not be
@@ -96,12 +97,20 @@ default['cassandra']['config']['partitioner'] = 'org.apache.cassandra.dht.Murmur
 # Directories where Cassandra should store data on disk.  Cassandra
 # will spread data evenly across them, subject to the granularity of
 # the configured compaction strategy.
+# If not set, the default directory is $CASSANDRA_HOME/data/data.
+# data_file_directories:
+#     - /var/lib/cassandra/data
 default['cassandra']['config']['data_file_directories'] = ['/var/lib/cassandra/data']
 
-# commit log
+# commit log.  when running on magnetic HDD, this should be a
+# separate spindle than the data directories.
+# If not set, the default directory is $CASSANDRA_HOME/data/commitlog.
+# commitlog_directory: /var/lib/cassandra/commitlog
 default['cassandra']['config']['commitlog_directory'] = '/var/lib/cassandra/commitlog'
 
 # policy for data disk failures:
+# die: shut down gossip and Thrift and kill the JVM for any fs errors or
+#      single-sstable errors, so the node can be replaced.
 # stop_paranoid: shut down gossip and Thrift even for single-sstable errors.
 # stop: shut down gossip and Thrift, leaving the node effectively dead, but
 #       can still be inspected via JMX.
@@ -112,9 +121,10 @@ default['cassandra']['config']['commitlog_directory'] = '/var/lib/cassandra/comm
 default['cassandra']['config']['disk_failure_policy'] = 'stop'
 
 # policy for commit disk failures:
+# die: shut down gossip and Thrift and kill the JVM, so the node can be replaced.
 # stop: shut down gossip and Thrift, leaving the node effectively dead, but
 #       can still be inspected via JMX.
-# stop_commit: shutdown the commit log, letting writes collect but 
+# stop_commit: shutdown the commit log, letting writes collect but
 #              continuing to service reads, as in pre-2.0.5 Cassandra
 # ignore: ignore fatal errors and let the batches fail
 default['cassandra']['config']['commit_failure_policy'] = 'stop'
@@ -156,7 +166,7 @@ default['cassandra']['config']['key_cache_keys_to_save'] = nil
 default['cassandra']['config']['row_cache_size_in_mb'] = 0
 
 # Duration in seconds after which Cassandra should
-# safe the row cache. Caches are saved to saved_caches_directory as specified
+# save the row cache. Caches are saved to saved_caches_directory as specified
 # in this configuration file.
 #
 # Saved caches greatly improve cold-start speeds, and is relatively cheap in
@@ -170,6 +180,33 @@ default['cassandra']['config']['row_cache_save_period'] = 0
 # Disabled by default, meaning all keys are going to be saved
 # row_cache_keys_to_save: 100
 default['cassandra']['config']['row_cache_keys_to_save'] = nil
+
+# Maximum size of the counter cache in memory.
+#
+# Counter cache helps to reduce counter locks' contention for hot counter cells.
+# In case of RF = 1 a counter cache hit will cause Cassandra to skip the read before
+# write entirely. With RF > 1 a counter cache hit will still help to reduce the duration
+# of the lock hold, helping with hot counter cell updates, but will not allow skipping
+# the read entirely. Only the local (clock, count) tuple of a counter cell is kept
+# in memory, not the whole counter, so it's relatively cheap.
+#
+# NOTE: if you reduce the size, you may not get you hottest keys loaded on startup.
+#
+# Default value is empty to make it "auto" (min(2.5% of Heap (in MB), 50MB)). Set to 0 to disable counter cache.
+# NOTE: if you perform counter deletes and rely on low gcgs, you should disable the counter cache.
+default['cassandra']['config']['counter_cache_size_in_mb'] = nil
+
+# Duration in seconds after which Cassandra should
+# save the counter cache (keys only). Caches are saved to saved_caches_directory as
+# specified in this configuration file.
+#
+# Default is 7200 or 2 hours.
+default['cassandra']['config']['counter_cache_save_period'] = 7200
+
+# Number of keys from the counter cache to save
+# Disabled by default, meaning all keys are going to be saved
+# counter_cache_keys_to_save: 100
+default['cassandra']['config']['counter_cache_keys_to_save'] = nil
 
 # The off-heap memory allocator.  Affects storage engine metadata as
 # well as caches.  Experiments show that JEMAlloc saves some memory
@@ -186,6 +223,8 @@ default['cassandra']['config']['row_cache_keys_to_save'] = nil
 default['cassandra']['config']['memory_allocator'] = 'NativeAllocator'
 
 # saved caches
+# If not set, the default directory is $CASSANDRA_HOME/data/saved_caches.
+# saved_caches_directory: /var/lib/cassandra/saved_caches
 default['cassandra']['config']['saved_caches_directory'] = '/var/lib/cassandra/saved_caches'
 
 # commitlog_sync may be either "periodic" or "batch." 
@@ -199,9 +238,9 @@ default['cassandra']['config']['saved_caches_directory'] = '/var/lib/cassandra/s
 #
 # the other option is "periodic" where writes may be acked immediately
 # and the CommitLog is simply synced every commitlog_sync_period_in_ms
-# milliseconds.  By default this allows 1024*(CPU cores) pending
-# entries on the commitlog queue.  If you are writing very large blobs,
-# you should reduce that; 16*cores works reasonably well for 1MB blobs.
+# milliseconds.  commitlog_periodic_queue_size allows 1024*(CPU cores) pending
+# entries on the commitlog queue by default.  If you are writing very large
+# blobs, you should reduce that; 16*cores works reasonably well for 1MB blobs.
 # It should be at least as large as the concurrent_writes setting.
 default['cassandra']['config']['commitlog_sync'] = 'periodic'
 default['cassandra']['config']['commitlog_sync_period_in_ms'] = 10000
@@ -220,59 +259,98 @@ default['cassandra']['config']['commitlog_segment_size_in_mb'] = 32
 
 # any class that implements the SeedProvider interface and has a
 # constructor that takes a Map<String, String> of parameters will do.
-# Addresses of hosts that are deemed contact points. 
-# Cassandra nodes use this list of hosts to find each other and learn
-# the topology of the ring.  You must change this if you are running
-# multiple nodes!
-# seeds is actually a comma-delimited list of addresses.
-# Ex: "<ip1>,<ip2>,<ip3>"
 default['cassandra']['config']['seed_provider'] = [
+    # Addresses of hosts that are deemed contact points. 
+    # Cassandra nodes use this list of hosts to find each other and learn
+    # the topology of the ring.  You must change this if you are running
+    # multiple nodes!
   { 'class_name' => 'org.apache.cassandra.locator.SimpleSeedProvider',
-    'parameters' => [{'seeds' => node['cassandra']['seed_list'].compact.sort.join(',')}]
+    'parameters' => [
+          # seeds is actually a comma-delimited list of addresses.
+          # Ex: "<ip1>,<ip2>,<ip3>"
+          {'seeds' => node['cassandra']['seed_list'].compact.sort.join(',')}]
   }]
 
 # For workloads with more data than can fit in memory, Cassandra's
 # bottleneck will be reads that need to fetch data from
 # disk. "concurrent_reads" should be set to (16 * number_of_drives) in
 # order to allow the operations to enqueue low enough in the stack
-# that the OS and drives can reorder them.
+# that the OS and drives can reorder them. Same applies to
+# "concurrent_counter_writes", since counter writes read the current
+# values before incrementing and writing them back.
 #
 # On the other hand, since writes are almost never IO bound, the ideal
 # number of "concurrent_writes" is dependent on the number of cores in
 # your system; (8 * number_of_cores) is a good rule of thumb.
 default['cassandra']['config']['concurrent_reads'] = 16 * node['cassandra']['config']['data_file_directories'].length
 default['cassandra']['config']['concurrent_writes'] = 8 * node['cpu']['total']
+default['cassandra']['config']['concurrent_counter_writes'] = 16 * node['cassandra']['config']['data_file_directories'].length
 
 # Total memory to use for sstable-reading buffers.  Defaults to
 # the smaller of 1/4 of heap or 512MB.
 default['cassandra']['config']['file_cache_size_in_mb'] = 512
 
-# Total memory to use for memtables.  Cassandra will flush the largest
-# memtable when this much memory is used.
-# If omitted, Cassandra will set it to 1/4 of the heap.
-default['cassandra']['config']['memtable_total_space_in_mb'] = 2048
+# Total permitted memory to use for memtables. Cassandra will stop 
+# accepting writes when the limit is exceeded until a flush completes,
+# and will trigger a flush based on memtable_cleanup_threshold
+# If omitted, Cassandra will set both to 1/4 the size of the heap.
+# memtable_heap_space_in_mb: 2048
+# memtable_offheap_space_in_mb: 2048
+default['cassandra']['config']['memtable_heap_space_in_mb'] = 2048
+default['cassandra']['config']['memtable_offheap_space_in_mb'] = 2048
+
+# Ratio of occupied non-flushing memtable size to total permitted size
+# that will trigger a flush of the largest memtable.  Lager mct will
+# mean larger flushes and hence less compaction, but also less concurrent
+# flush activity which can make it difficult to keep your disks fed
+# under heavy write load.
+#
+# memtable_cleanup_threshold defaults to 1 / (memtable_flush_writers + 1)
+# memtable_cleanup_threshold: 0.11
+default['cassandra']['config']['memtable_cleanup_threshold'] = nil
+
+# Specify the way Cassandra allocates and manages memtable memory.
+# Options are:
+#   heap_buffers:    on heap nio buffers
+#   offheap_buffers: off heap (direct) nio buffers
+#   offheap_objects: native memory, eliminating nio buffer heap overhead
+default['cassandra']['config']['memtable_allocation_type'] = 'heap_buffers'
 
 # Total space to use for commitlogs.  Since commitlog segments are
 # mmapped, and hence use up address space, the default size is 32
-# on 32-bit JVMs, and 1024 on 64-bit JVMs.
+# on 32-bit JVMs, and 8192 on 64-bit JVMs.
 #
 # If space gets above this value (it will round up to the next nearest
 # segment multiple), Cassandra will flush every dirty CF in the oldest
 # segment and remove it.  So a small total commitlog space will tend
 # to cause more flush activity on less-active columnfamilies.
-default['cassandra']['config']['commitlog_total_space_in_mb'] = 4096
+default['cassandra']['config']['commitlog_total_space_in_mb'] = 8192
 
 # This sets the amount of memtable flush writer threads.  These will
 # be blocked by disk io, and each one will hold a memtable in memory
-# while blocked. If you have a large heap and many data directories,
-# you can increase this value for better flush performance.
-# By default this will be set to the amount of data directories defined.
-default['cassandra']['config']['memtable_flush_writers'] = node['cassandra']['config']['data_file_directories'].length
+# while blocked. 
+#
+# memtable_flush_writers defaults to the smaller of (number of disks,
+# number of cores), with a minimum of 2 and a maximum of 8.
+# 
+# If your data directories are backed by SSD, you should increase this
+# to the number of cores.
+#memtable_flush_writers: 8
+default['cassandra']['config']['memtable_flush_writers'] = node['cpu']['total']
 
-# the number of full memtables to allow pending flush, that is,
-# waiting for a writer thread.  At a minimum, this should be set to
-# the maximum number of secondary indexes created on a single CF.
-default['cassandra']['config']['memtable_flush_queue_size'] = 4
+# A fixed memory pool size in MB for for SSTable index summaries. If left
+# empty, this will default to 5% of the heap size. If the memory usage of
+# all index summaries exceeds this limit, SSTables with low read rates will
+# shrink their index summaries in order to meet this limit.  However, this
+# is a best-effort process. In extreme conditions Cassandra may need to use
+# more than this amount of memory.
+default['cassandra']['config']['index_summary_capacity_in_mb'] = nil
+
+# How frequently index summaries should be resampled.  This is done
+# periodically to redistribute memory from the fixed-size pool to sstables
+# proportional their recent read rates.  Setting to -1 will disable this
+# process, leaving existing index summaries at their current sampling level.
+default['cassandra']['config']['index_summary_resize_interval_in_minutes'] = 60
 
 # Whether to, when doing sequential writing, fsync() at intervals in
 # order to force the operating system to flush the dirty
@@ -289,17 +367,20 @@ default['cassandra']['config']['storage_port'] = 7000
 # encryption_options
 default['cassandra']['config']['ssl_storage_port'] = 7001
 
-# Address to bind to and tell other Cassandra nodes to connect to. You
-# _must_ change this if you want multiple nodes to be able to
-# communicate!
-# 
+# Address or interface to bind to and tell other Cassandra nodes to connect to.
+# You _must_ change this if you want multiple nodes to be able to communicate!
+#
+# Set listen_address OR listen_interface, not both. Interfaces must correspond
+# to a single address, IP aliasing is not supported.
+#
 # Leaving it blank leaves it up to InetAddress.getLocalHost(). This
 # will always do the Right Thing _if_ the node is properly configured
 # (hostname, name resolution, etc), and the Right Thing is to use the
 # address associated with the hostname (it might not be).
 #
-# Setting this to 0.0.0.0 is always wrong.
+# Setting listen_address to 0.0.0.0 is always wrong.
 default['cassandra']['config']['listen_address'] = node['ipaddress']
+default['cassandra']['config']['listen_interface'] = nil
 
 # Address to broadcast to other Cassandra nodes
 # Leaving this blank will set it to the same value as listen_address
@@ -320,24 +401,39 @@ default['cassandra']['config']['native_transport_port'] = 9042
 # there is no native_transport_min_threads, idle threads will always be stopped
 # after 30 seconds).
 default['cassandra']['config']['native_transport_max_threads'] = 128
+# native_transport_max_threads: 128
+#
+# The maximum size of allowed frame. Frame (requests) larger than this will
+# be rejected as invalid. The default is 256MB.
+# native_transport_max_frame_size_in_mb: 256
 
 # Whether to start the thrift rpc server.
 default['cassandra']['config']['start_rpc'] = true
 
-# The address to bind the Thrift RPC service and native transport
-# server -- clients connect here.
+# The address or interface to bind the Thrift RPC service and native transport
+# server to.
 #
-# Leaving this blank has the same effect it does for ListenAddress,
+# Set rpc_address OR rpc_interface, not both. Interfaces must correspond
+# to a single address, IP aliasing is not supported.
+#
+# Leaving rpc_address blank has the same effect as on listen_address
 # (i.e. it will be based on the configured hostname of the node).
 #
-# Note that unlike ListenAddress above, it is allowed to specify 0.0.0.0
-# here if you want to listen on all interfaces, but that will break clients 
-# that rely on node auto-discovery.
+# Note that unlike listen_address, you can specify 0.0.0.0, but you must also
+# set broadcast_rpc_address to a value other than 0.0.0.0.
 default['cassandra']['config']['rpc_address'] = node['ipaddress']
+default['cassandra']['config']['rpc_interface'] = nil
+
 # port for Thrift to listen for clients on
 default['cassandra']['config']['rpc_port'] = 9160
 
-# enable or disable keepalive on rpc connections
+# RPC address to broadcast to drivers and other Cassandra nodes. This cannot
+# be set to 0.0.0.0. If left blank, this will be set to the value of
+# rpc_address. If rpc_address is set to 0.0.0.0, broadcast_rpc_address must
+# be set.
+default['cassandra']['config']['broadcast_rpc_address'] = nil
+
+# enable or disable keepalive on rpc/native connections
 default['cassandra']['config']['rpc_keepalive'] = true
 
 # Cassandra provides two out-of-the-box options for the RPC Server:
@@ -350,14 +446,15 @@ default['cassandra']['config']['rpc_keepalive'] = true
 # hsha  -> Stands for "half synchronous, half asynchronous." All thrift clients are handled
 #          asynchronously using a small number of threads that does not vary with the amount
 #          of thrift clients (and thus scales well to many clients). The rpc requests are still
-#          synchronous (one thread per active request).
+#          synchronous (one thread per active request). If hsha is selected then it is essential
+#          that rpc_max_threads is changed from the default value of unlimited.
 #
 # The default is sync because on Windows hsha is about 30% slower.  On Linux,
 # sync/hsha performance is about the same, with hsha of course using less memory.
 #
 # Alternatively,  can provide your own RPC server by providing the fully-qualified class name
 # of an o.a.c.t.TServerFactory that can create an instance of it.
-default['cassandra']['config']['rpc_server_type'] = 'hsha'
+default['cassandra']['config']['rpc_server_type'] = 'sync'
 
 # Uncomment rpc_min|max_thread to set request pool size limits.
 #
@@ -423,23 +520,20 @@ default['cassandra']['config']['auto_snapshot'] = true
 default['cassandra']['config']['tombstone_warn_threshold'] = 1000
 default['cassandra']['config']['tombstone_failure_threshold'] = 100000
 
-# Add column indexes to a row after its contents reach this size.
-# Increase if your column values are large, or if you have a very large
-# number of columns.  The competing causes are, Cassandra has to
-# deserialize this much of the row to read a single column, so you want
-# it to be small - at least if you do many partial-row reads - but all
-# the index data is read for each access, so you don't want to generate
-# that wastefully either.
+# Granularity of the collation index of rows within a partition.
+# Increase if your rows are large, or if you have a very large
+# number of rows per partition.  The competing goals are these:
+#   1) a smaller granularity means more index entries are generated
+#      and looking up rows withing the partition by collation column
+#      is faster
+#   2) but, Cassandra will keep the collation index in memory for hot
+#      rows (as part of the key cache), so a larger granularity means
+#      you can cache more hot rows
 default['cassandra']['config']['column_index_size_in_kb'] = 64
 
 # Log WARN on any batch size exceeding this value. 5kb per batch by default.
 # Caution should be taken on increasing the size of this threshold as it can lead to node instability.
 default['cassandra']['config']['batch_size_warn_threshold_in_kb'] = 5
-
-# Size limit for rows being compacted in memory.  Larger rows will spill
-# over to disk and use a slower two-pass compaction process.  A message
-# will be logged specifying the row key.
-default['cassandra']['config']['in_memory_compaction_limit_in_mb'] = 64
 
 # Number of simultaneous compactions to allow, NOT including
 # validation "compactions" for anti-entropy repair.  Simultaneous
@@ -450,16 +544,13 @@ default['cassandra']['config']['in_memory_compaction_limit_in_mb'] = 64
 # slowly or too fast, you should look at
 # compaction_throughput_mb_per_sec first.
 #
-# concurrent_compactors defaults to the number of cores.
-# Uncomment to make compaction mono-threaded, the pre-0.8 default.
-default['cassandra']['config']['concurrent_compactors'] = nil
-
-# Multi-threaded compaction. When enabled, each compaction will use
-# up to one thread per core, plus one thread per sstable being merged.
-# This is usually only useful for SSD-based hardware: otherwise, 
-# your concern is usually to get compaction to do LESS i/o (see:
-# compaction_throughput_mb_per_sec), not more.
-default['cassandra']['config']['multithreaded_compaction'] = false
+# concurrent_compactors defaults to the smaller of (number of disks,
+# number of cores), with a minimum of 2 and a maximum of 8.
+# 
+# If your data directories are backed by SSD, you should increase this
+# to the number of cores.
+#concurrent_compactors: 1
+default['cassandra']['config']['concurrent_compactors'] = node['cpu']['total']
 
 # Throttles compaction to the given total throughput across the entire
 # system. The faster you insert data, the faster you need to compact in
@@ -469,10 +560,11 @@ default['cassandra']['config']['multithreaded_compaction'] = false
 # of compaction, including validation compaction.
 default['cassandra']['config']['compaction_throughput_mb_per_sec'] = 16
 
-# Track cached row keys during compaction, and re-cache their new
-# positions in the compacted sstable.  Disable if you use really large
-# key caches.
-default['cassandra']['config']['compaction_preheat_key_cache'] = true
+# When compacting, the replacement sstable(s) can be opened before they
+# are completely written, and used in place of the prior sstables for
+# any range that has been written. This helps to smoothly transfer reads 
+# between the sstables, reducing page cache churn and keeping hot rows hot
+default['cassandra']['config']['sstable_preemptive_open_interval_in_mb'] = 50
 
 # Throttles all outbound streaming file transfers on this node to the
 # given total throughput in Mbps. This is necessary because Cassandra does
@@ -482,12 +574,21 @@ default['cassandra']['config']['compaction_preheat_key_cache'] = true
 # stream_throughput_outbound_megabits_per_sec: 200
 default['cassandra']['config']['stream_throughput_outbound_megabits_per_sec'] = nil
 
+# Throttles all streaming file transfer between the datacenters,
+# this setting allows users to throttle inter dc stream throughput in addition
+# to throttling all network stream traffic as configured with
+# stream_throughput_outbound_megabits_per_sec
+# inter_dc_stream_throughput_outbound_megabits_per_sec:
+default['cassandra']['config']['inter_dc_stream_throughput_outbound_megabits_per_sec'] = nil
+
 # How long the coordinator should wait for read operations to complete
 default['cassandra']['config']['read_request_timeout_in_ms'] = 5000
 # How long the coordinator should wait for seq or index scans to complete
 default['cassandra']['config']['range_request_timeout_in_ms'] = 10000
 # How long the coordinator should wait for writes to complete
 default['cassandra']['config']['write_request_timeout_in_ms'] = 2000
+# How long the coordinator should wait for counter writes to complete
+default['cassandra']['config']['counter_write_request_timeout_in_ms'] = 5000
 # How long a coordinator should continue to retry a CAS operation
 # that contends with other proposals for the same row
 default['cassandra']['config']['cas_contention_timeout_in_ms'] = 1000
@@ -681,10 +782,3 @@ default['cassandra']['config']['internode_compression'] = 'all'
 # reducing overhead from the TCP protocol itself, at the cost of increasing
 # latency if you block for cross-datacenter responses.
 default['cassandra']['config']['inter_dc_tcp_nodelay'] = false
-
-# Enable or disable kernel page cache preheating from contents of the key cache after compaction.
-# When enabled it would preheat only first "page" (4KB) of each row to optimize
-# for sequential access. Note: This could be harmful for fat rows, see CASSANDRA-4937
-# for further details on that topic.
-default['cassandra']['config']['preheat_kernel_page_cache'] = false
-
