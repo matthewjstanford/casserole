@@ -11,8 +11,8 @@
 . /etc/rc.d/init.d/functions
 
 export CASSANDRA_HOME=<%= @home_dir %>
-export CASSANDRA_INCLUDE=<%= @conf_dir %>/cassandra.in.sh
 export CASSANDRA_CONF=<%= @conf_dir %>
+export CASSANDRA_INCLUDE=<%= @conf_dir %>/cassandra.in.sh
 export CASSANDRA_OWNR=<%= @user %>
 NAME="<%= @service_name %>"
 log_file=/var/log/cassandra/cassandra.log
@@ -20,7 +20,7 @@ pid_file=/var/run/cassandra/cassandra.pid
 CASSANDRA_PROG=/usr/sbin/cassandra
 
 # The first existing directory is used for JAVA_HOME if needed.
-JVM_SEARCH_DIRS="/usr/lib/jvm/jre /usr/lib/jvm/jre-1.6.* /usr/lib/jvm/java-1.6.*/jre"
+JVM_SEARCH_DIRS="/usr/lib/jvm/jre /usr/lib/jvm/jre-1.7.* /usr/lib/jvm/java-1.7.*/jre"
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -61,6 +61,10 @@ case "$1" in
         echo -n "Shutdown Cassandra: "
         su $CASSANDRA_OWNR -c "kill `cat $pid_file`"
         for t in `seq 40`; do $0 status > /dev/null 2>&1 && sleep 0.5 || break; done
+        # Adding a sleep here to give jmx time to wind down (CASSANDRA-4483). Not ideal...
+        # Adam Holmberg suggests this, but that would break if the jmx port is changed
+        # for t in `seq 40`; do netstat -tnlp | grep "0.0.0.0:7199" > /dev/null 2>&1 && sleep 0.1 || break; done
+        sleep 5
         echo "OK"
         ;;
     reload|restart)

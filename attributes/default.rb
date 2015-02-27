@@ -44,6 +44,7 @@ default["cassandra"]["packages"] = {
     "dsc21" => { "version" => "2.1.2-1" },
     "datastax-agent" => {"version" => "5.0.2-1"},
 }
+default['cassandra']['remove_packages'] = %w(dsc1.1 dsc12 dsc20 cassandra1.1 cassandra12 cassandra20)
 default["cassandra"]["remote_files"] = {
 #    "jna" => {"source"      => "https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/4.1.0/jna-4.1.0.jar",
 #              "destination" => File.join(node["cassandra"]["home_dir"],'/lib/','jna-4.1.0.jar')},

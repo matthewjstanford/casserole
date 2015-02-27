@@ -4,13 +4,13 @@ end
 
 action :run do
   script "alter_cluster_name #{new_resource.name}" do
-    interpreter "bash"
-    user "root"
+    interpreter 'bash'
+    user 'root'
 
     conf = YAML.load_file('/etc/cassandra/conf/cassandra.yaml')
 
-    listen_address = conf['rpc_address'] || node['ipaddress']
-    listen_port = conf['rpc_port'] || "9160"
+    listen_address = conf['listen_address'] || node['ipaddress']
+    listen_port = conf['native_transport_port'] || '9042'
 
     listen_address = '127.0.0.1' if listen_address == 'localhost'
     listen_address = node['ipaddress'] if listen_address == '0.0.0.0'

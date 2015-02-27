@@ -19,6 +19,13 @@
 
 service node["cassandra"]["name"]
 
+# Remove old packages
+node['cassandra']['remove_packages'].each do |pkg|
+  package pkg do
+    action :remove
+  end
+end
+
 node["cassandra"]["build_packages"].each do |pkg|
   p = package pkg do
     action :nothing
